@@ -1,0 +1,58 @@
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 YaBrowser/25.12.0.0 Safari/537.36" version="29.6.1">
+  <diagram name="Страница-1" id="phh5NLMKXjaKl70Yha_e">
+    <mxGraphModel dx="984" dy="545" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="YY2gl2VeBJ03D0jN3mYn-2" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="Steam Dataset&lt;div&gt;(user, game, hours)&lt;/div&gt;" vertex="1">
+          <mxGeometry height="60" width="120" x="200" y="50" as="geometry" />
+        </mxCell>
+        <mxCell id="YY2gl2VeBJ03D0jN3mYn-3" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="PlayMyData&lt;div&gt;(game, genres, rating, summary, main, extra)&lt;/div&gt;" vertex="1">
+          <mxGeometry height="60" width="240" x="480" y="50" as="geometry" />
+        </mxCell>
+        <mxCell id="YY2gl2VeBJ03D0jN3mYn-4" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="User-Based&lt;span style=&quot;color: rgba(0, 0, 0, 0); font-family: monospace; font-size: 0px; text-align: start; text-wrap-mode: nowrap;&quot;&gt;%3CmxGraphModel%3E%3Croot%3E%3CmxCell%20id%3D%220%22%2F%3E%3CmxCell%20id%3D%221%22%20parent%3D%220%22%2F%3E%3CmxCell%20id%3D%222%22%20parent%3D%221%22%20style%3D%22rounded%3D1%3BwhiteSpace%3Dwrap%3Bhtml%3D1%3B%22%20value%3D%22Steam%20Dataset%26lt%3Bdiv%26gt%3B(user%2C%20game%2C%20hours)%26lt%3B%2Fdiv%26gt%3B%22%20vertex%3D%221%22%3E%3CmxGeometry%20height%3D%2260%22%20width%3D%22120%22%20x%3D%22200%22%20y%3D%2250%22%20as%3D%22geometry%22%2F%3E%3C%2FmxCell%3E%3C%2Froot%3E%3C%2FmxGraphModel%3E&lt;/span&gt;" vertex="1">
+          <mxGeometry height="60" width="120" x="200" y="160" as="geometry" />
+        </mxCell>
+        <mxCell id="YY2gl2VeBJ03D0jN3mYn-5" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="Item-Based" vertex="1">
+          <mxGeometry height="60" width="120" x="540" y="160" as="geometry" />
+        </mxCell>
+        <mxCell id="YY2gl2VeBJ03D0jN3mYn-6" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="Матчим по названию" vertex="1">
+          <mxGeometry height="60" width="120" x="370" y="270" as="geometry" />
+        </mxCell>
+        <mxCell id="YY2gl2VeBJ03D0jN3mYn-7" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="Финальная модель" vertex="1">
+          <mxGeometry height="60" width="120" x="370" y="380" as="geometry" />
+        </mxCell>
+        <mxCell id="YY2gl2VeBJ03D0jN3mYn-8" edge="1" parent="1" source="YY2gl2VeBJ03D0jN3mYn-2" style="endArrow=classic;html=1;rounded=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="350" y="270" as="sourcePoint" />
+            <mxPoint x="260" y="150" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="YY2gl2VeBJ03D0jN3mYn-9" edge="1" parent="1" source="YY2gl2VeBJ03D0jN3mYn-3" style="endArrow=classic;html=1;rounded=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="490" y="190" as="sourcePoint" />
+            <mxPoint x="600" y="150" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="YY2gl2VeBJ03D0jN3mYn-10" edge="1" parent="1" source="YY2gl2VeBJ03D0jN3mYn-4" style="endArrow=classic;html=1;rounded=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="120" y="340" as="sourcePoint" />
+            <mxPoint x="360" y="300" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="YY2gl2VeBJ03D0jN3mYn-11" edge="1" parent="1" source="YY2gl2VeBJ03D0jN3mYn-5" style="endArrow=classic;html=1;rounded=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="190" y="320" as="sourcePoint" />
+            <mxPoint x="500" y="300" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="YY2gl2VeBJ03D0jN3mYn-12" edge="1" parent="1" source="YY2gl2VeBJ03D0jN3mYn-6" style="endArrow=classic;html=1;rounded=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" value="">
+          <mxGeometry height="50" relative="1" width="50" as="geometry">
+            <mxPoint x="250" y="390" as="sourcePoint" />
+            <mxPoint x="430" y="370" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

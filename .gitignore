@@ -1,0 +1,11 @@
+.idea
+venv/
+
+__pycache__/
+.pybuilder/
+target/
+
+.ipynb_checkpoints
+__pypackages__/
+
+.env
