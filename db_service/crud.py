@@ -75,6 +75,44 @@ class SyncLogCrud:
         )
 
 
+class EmbeddingCrud:
+    def __init__(self, session: AsyncSession) -> None:
+        self._session = session
+
+    async def get_games_without_embeddings(self, batch_size: int, offset: int = 0) -> list[Game]:
+        result = await self._session.execute(
+            select(
+                Game.id,
+                Game.name,
+                Game.summary,
+                Game.storyline,
+                Game.genres,
+                Game.themes,
+                Game.keywords
+            ).where(Game.embedding.is_(None))
+            .order_by(Game.id)
+            .limit(batch_size)
+            .offset(offset)
+        )
+
+        return result.all()
+
+    async def save_embeddings(self, embeddings: list[tuple[int, list[float]]]) -> None:
+        for game_id, vector in embeddings:
+            await self._session.execute(
+                update(Game)
+                .where(Game.id == game_id)
+                .values(embedding=vector)
+            )
+
+    async def count_without_embeddings(self) -> None:
+        result = await self._session.execute(
+            select(func.count()).select_from(Game).where(Game.embedding.is_(None))
+        )
+
+        return result.scalar_one()
+
+
 def _game_to_dict(game: IGDBGame) -> dict:
     return {
         'igdb_id': game.id,

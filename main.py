@@ -4,17 +4,18 @@ import signal
 import sys
 from typing import Optional
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from apscheduler.triggers.interval import IntervalTrigger
+from apscheduler.triggers.cron import CronTrigger
 
 from config import load_db_config, load_igdb_config
 from db_service.connection import Database
 from db_service.migrations import run_migrations
 from igdb_service.client import IGDBClient
 from sync_service.syncer import SyncService
+from embedding_service.embedder import EmbeddingService
 
 logger = logging.getLogger(__name__)
 
-SYNC_INTERVAL_HOURS = 24
+SYNC_HOUR, SYNC_MINUTE = 2, 0
 
 
 def setup_logging() -> None:
@@ -33,6 +34,7 @@ class App:
     def __init__(self) -> None:
         self._db: Optional[Database] = None
         self._sync_service: Optional[SyncService] = None
+        self._embedding_service: Optional[EmbeddingService] = None
         self._scheduler: Optional[AsyncIOScheduler] = None
 
     async def start(self) -> None:
@@ -47,19 +49,22 @@ class App:
             db=self._db
         )
 
-        await self._run_sync()
+        self._embedding_service = EmbeddingService(db=self._db)
+
+        await self._run_sync_then_embed()
 
         self._scheduler = AsyncIOScheduler()
         self._scheduler.add_job(
-            self._run_sync,
-            trigger=IntervalTrigger(hours=SYNC_INTERVAL_HOURS),
-            id='incremental_sync',
-            name='IGDB incremental sync',
+            self._run_sync_then_embed,
+            trigger=CronTrigger(hour=SYNC_HOUR, minute=SYNC_MINUTE, timezone='Europe/Moscow'),
+            id='sync_and_embed',
+            name='IGDB sync + embedding',
             max_instances=1,
-            misfire_grace_time=60
+            misfire_grace_time=600
         )
+
         self._scheduler.start()
-        logger.info(f'Scheduler started: incremental sync every {SYNC_INTERVAL_HOURS} hours')
+        logger.info(f'Scheduler started: nightly sync at {SYNC_HOUR:02d}:{SYNC_MINUTE:02d} Moscow')
 
     async def stop(self) -> None:
         logger.info('Shutting down')
@@ -70,11 +75,21 @@ class App:
             await self._db.close()
         logger.info('Shutdown complete')
 
+    async def _run_sync_then_embed(self) -> None:
+        await self._run_sync()
+        await self._run_embedding()
+
     async def _run_sync(self) -> None:
         try:
             await self._sync_service.run()
         except Exception:
             logger.exception('Sync failed, will retry on next schedule')
+
+    async def _run_embedding(self) -> None:
+        try:
+            await self._embedding_service.run()
+        except Exception:
+            logger.exception('Embedding failed, will retry on next schedule')
 
 
 async def main() -> None:

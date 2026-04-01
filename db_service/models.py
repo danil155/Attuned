@@ -1,8 +1,10 @@
 from datetime import datetime
-
 from sqlalchemy import ARRAY, SMALLINT, Float, Integer, Text, UniqueConstraint
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from sqlalchemy.sql import func
+from pgvector.sqlalchemy import Vector
+
+EMBEDDINGS_DIM = 384
 
 
 class Base(DeclarativeBase):
@@ -32,6 +34,8 @@ class Game(Base):
     player_perspectives: Mapped[list[str]] = mapped_column(ARRAY(Text), server_default='{}', nullable=False)
     platforms: Mapped[list[str]] = mapped_column(ARRAY(Text), server_default='{}', nullable=False)
     developers: Mapped[list[str]] = mapped_column(ARRAY(Text), server_default='{}', nullable=False)
+
+    embedding: Mapped[list[float] | None] = mapped_column(Vector(EMBEDDINGS_DIM), nullable=True)
 
     rating: Mapped[float | None] = mapped_column(Float)
     rating_count: Mapped[int | None] = mapped_column(Integer)

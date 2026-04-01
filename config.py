@@ -22,20 +22,19 @@ class DBConfig:
     name: str
     user: str
     password: str
-    min_connections: int = 2
-    max_connections: int = 10
+
+    app_pool_size: int = 10
+    app_max_overflow: int = 20
+    app_pool_timeout: float = 5.0
+
+    background_pool_size: int = 2
+    background_max_overflow: int = 1
+
+    pool_recycle: int = 1800
 
     @property
     def dsn(self) -> str:
         return f'postgresql+asyncpg://{self.user}:{self.password}@{self.host}:{self.port}/{self.name}'
-
-
-def _require_env(key: str) -> str:
-    value = os.getenv(key)
-    if not value:
-        raise EnvironmentError(f'Required env variable "{key}" is not set')
-
-    return value
 
 
 def load_igdb_config() -> IGDBConfig:
@@ -53,3 +52,11 @@ def load_db_config() -> DBConfig:
         user='postgres',
         password=_require_env('DB_PASSWORD')
     )
+
+
+def _require_env(key: str) -> str:
+    value = os.getenv(key)
+    if not value:
+        raise EnvironmentError(f'Required env variable "{key}" is not set')
+
+    return value

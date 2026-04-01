@@ -17,7 +17,7 @@ class SyncService:
 
     # автоматически выбирает, делать полное обновление БД или обновить только изменившиеся записи
     async def run(self, force_full: bool = False) -> None:
-        async with self._db.session() as session:
+        async with self._db.background_session() as session:
             game_crud = GameCrud(session)
             last_sync = await game_crud.get_last_sync_timestamp()
 
@@ -36,24 +36,24 @@ class SyncService:
         logger.info('FULL SYNC STARTED')
         total = 0
 
-        async with self._db.session() as session:
+        async with self._db.background_session() as session:
             log_crud = SyncLogCrud(session)
             log_id = await log_crud.start('full')
 
         try:
             for batch in self._igdb.fetch_all_games():
-                async with self._db.session() as session:
+                async with self._db.background_session() as session:
                     count = await GameCrud(session).upsert_batch(batch)
 
                 total += count
                 logger.info(f'Updated {count} games (total: {total})')
 
-            async with self._db.session() as session:
+            async with self._db.background_session() as session:
                 await SyncLogCrud(session).finish(log_id, total)
 
             logger.info(f'FULL SYNC DONE: {total} games')
         except Exception as e:
-            async with self._db.session() as session:
+            async with self._db.background_session() as session:
                 await SyncLogCrud(session).fail(log_id, str(e))
 
             logger.exception(f'FULL_SYNC_FAILED after {total} games')
@@ -63,23 +63,23 @@ class SyncService:
         logger.info(f'INCREMENTAL SYNC STARTED (since {since.isoformat()}')
         total = 0
 
-        async with self._db.session() as session:
+        async with self._db.background_session() as session:
             log_crud = SyncLogCrud(session)
             log_id = await log_crud.start('incremental')
 
         try:
             for batch in self._igdb.fetch_update_games(since=since):
-                async with self._db.session() as session:
+                async with self._db.background_session() as session:
                     count = await GameCrud(session).upsert_batch(batch)
 
                 total += count
 
-            async with self._db.session() as session:
+            async with self._db.background_session() as session:
                 await SyncLogCrud(session).finish(log_id, total)
 
             logger.info(f'INCREMENTAL SYNC DONE: {total} games updated')
         except Exception as e:
-            async with self._db.session() as session:
+            async with self._db.background_session() as session:
                 await SyncLogCrud(session).fail(log_id, str(e))
 
             logger.exception(f'INCREMENTAL SYNC FAILED after {total} games')
