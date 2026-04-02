@@ -46,10 +46,10 @@ def load_igdb_config() -> IGDBConfig:
 
 def load_db_config() -> DBConfig:
     return DBConfig(
-        host='localhost',
-        port='5432',
-        name='attuned',
-        user='postgres',
+        host=_require_env('DB_HOST'),
+        port=_require_env('DB_PORT'),
+        name=_require_env('DB_NAME'),
+        user=_require_env('DB_USER'),
         password=_require_env('DB_PASSWORD')
     )
 
