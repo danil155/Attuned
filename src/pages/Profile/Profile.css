@@ -1,0 +1,428 @@
+.profile {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 3rem 2rem 6rem;
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 2rem;
+    align-items: start;
+}
+
+/* ── Sidebar ── */
+.profile__sidebar {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.25rem;
+    position: sticky;
+    top: 84px;
+}
+
+.sidebar__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+}
+
+.sidebar__title {
+    font-family: "Bebas Neue", sans-serif;
+    font-size: 20px;
+    letter-spacing: 0.06em;
+    color: var(--text);
+}
+
+.plan-badge {
+    padding: 3px 10px;
+    border-radius: 100px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    background: var(--surface);
+    color: var(--text-3);
+    border: 1px solid var(--border);
+}
+
+.plan-badge[data-pro="true"] {
+    background: var(--orange-dim);
+    color: var(--orange);
+    border-color: rgba(255, 107, 53, 0.35);
+}
+
+/* Basket tabs */
+.basket-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 1rem;
+}
+
+.basket-tab {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    width: 100%;
+    padding: 10px 12px;
+    background: none;
+    border: 1px solid transparent;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    font-family: "Outfit", sans-serif;
+    text-align: left;
+    transition: all var(--transition);
+}
+
+.basket-tab:hover {
+    background: rgba(255, 255, 255, 0.04);
+    border-color: var(--border);
+}
+
+.basket-tab--active {
+    background: var(--orange-dim);
+    border-color: rgba(255, 107, 53, 0.3);
+}
+
+.basket-tab__info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    flex: 1;
+}
+
+.basket-tab__name {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.basket-tab--active .basket-tab__name { color: var(--orange); }
+
+.basket-tab__count {
+    font-size: 11px;
+    color: var(--text-3);
+}
+
+.basket-tab__rename {
+    background: none;
+    border: none;
+    border-bottom: 1px solid var(--orange);
+    outline: none;
+    font-family: "Outfit", sans-serif;
+    font-size: 14px;
+    color: var(--text);
+    width: 100%;
+    padding: 1px 0;
+}
+
+.basket-tab__actions {
+    display: flex;
+    gap: 3px;
+    opacity: 0;
+    transition: opacity var(--transition);
+}
+
+.basket-tab:hover .basket-tab__actions { opacity: 1; }
+
+/* Icon buttons */
+.icon-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    background: none;
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    color: var(--text-3);
+    transition: all var(--transition);
+}
+
+.icon-btn:hover {
+    background: rgba(255, 255, 255, 0.07);
+    color: var(--text);
+}
+
+.icon-btn--danger:hover {
+    background: rgba(255, 80, 80, 0.12);
+    color: #ff6060;
+}
+
+/* New basket form */
+.new-basket-form {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 10px;
+    background: var(--surface);
+    border: 1px solid var(--border-md);
+    border-radius: var(--radius-md);
+}
+
+.new-basket-input {
+    background: none;
+    border: none;
+    border-bottom: 1px solid var(--orange);
+    outline: none;
+    font-family: "Outfit", sans-serif;
+    font-size: 14px;
+    color: var(--text);
+    padding: 4px 0;
+}
+
+.new-basket-input::placeholder { color: var(--text-3); }
+
+.new-basket-actions {
+    display: flex;
+    gap: 6px;
+}
+
+.btn-sm {
+    padding: 5px 12px;
+    background: var(--card);
+    border: 1px solid var(--border-md);
+    border-radius: var(--radius-sm);
+    color: var(--text-2);
+    font-family: "Outfit", sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition);
+}
+
+.btn-sm:hover { color: var(--text); border-color: var(--text-3); }
+
+.btn-sm--primary {
+    background: var(--orange);
+    border-color: var(--orange);
+    color: #fff;
+}
+
+.btn-sm--primary:hover {
+    background: var(--orange-dark);
+    border-color: var(--orange-dark);
+    color: #fff;
+}
+
+.btn-add-basket {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    width: 100%;
+    padding: 9px 12px;
+    background: none;
+    border: 1px dashed var(--border-md);
+    border-radius: var(--radius-md);
+    color: var(--text-3);
+    font-family: "Outfit", sans-serif;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all var(--transition);
+}
+
+.btn-add-basket:hover {
+    border-color: var(--orange);
+    color: var(--orange);
+    background: var(--orange-dim);
+}
+
+.limit-notice {
+    padding: 10px 12px;
+    background: var(--surface);
+    border-radius: var(--radius-md);
+    font-size: 12px;
+    color: var(--text-3);
+    line-height: 1.5;
+}
+
+.limit-notice__pro strong { color: var(--orange); }
+
+/* ── Main ── */
+.profile__main {}
+
+.basket-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.basket-title {
+    font-family: "Bebas Neue", sans-serif;
+    font-size: 38px;
+    letter-spacing: 0.05em;
+    color: var(--text);
+    line-height: 1;
+}
+
+.basket-subtitle {
+    font-size: 14px;
+    color: var(--text-3);
+    margin-top: 4px;
+}
+
+.btn-generate-basket {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 24px;
+    height: 46px;
+    background: var(--orange);
+    border: none;
+    border-radius: 100px;
+    color: #fff;
+    font-family: "Outfit", sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 6px 24px rgba(255, 107, 53, 0.3);
+    transition: all var(--transition);
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.btn-generate-basket:hover:not(.btn-generate-basket--disabled) {
+    background: var(--orange-dark);
+    transform: translateY(-1px);
+    box-shadow: 0 10px 30px rgba(255, 107, 53, 0.4);
+}
+
+.btn-generate-basket--disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+.basket-search {
+    margin-bottom: 1.5rem;
+    max-width: 560px;
+}
+
+/* Games list */
+.basket-games {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.basket-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    transition: border-color var(--transition);
+    animation: rowIn 200ms cubic-bezier(0.2, 0, 0, 1) both;
+}
+
+@keyframes rowIn {
+    from { opacity: 0; transform: translateX(-8px); }
+    to   { opacity: 1; transform: none; }
+}
+
+.basket-row:hover { border-color: var(--border-md); }
+
+.basket-row__cover {
+    width: 38px;
+    height: 50px;
+    border-radius: 5px;
+    background-size: cover;
+    background-position: center;
+    background-color: var(--surface);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-3);
+    flex-shrink: 0;
+}
+
+.basket-row__info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+}
+
+.basket-row__title {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.basket-row__meta {
+    font-size: 12px;
+    color: var(--text-3);
+}
+
+/* Empty state */
+.empty-state {
+    padding: 3rem 0;
+    text-align: center;
+}
+
+.empty-state__title {
+    font-family: "Bebas Neue", sans-serif;
+    font-size: 24px;
+    letter-spacing: 0.06em;
+    color: var(--text-2);
+    margin-bottom: 8px;
+}
+
+.empty-state__sub {
+    font-size: 14px;
+    color: var(--text-3);
+    margin-bottom: 1.5rem;
+}
+
+.packs-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+}
+
+.pack-pill {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 8px 16px;
+    background: var(--card);
+    border: 1px solid var(--border-md);
+    border-radius: 100px;
+    color: var(--text);
+    font-family: "Outfit", sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition);
+}
+
+.pack-pill:hover {
+    border-color: var(--orange);
+    color: var(--orange);
+    background: var(--orange-dim);
+}
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+    .profile {
+        grid-template-columns: 1fr;
+        padding: 2rem 1rem 4rem;
+    }
+    .profile__sidebar { position: static; }
+}

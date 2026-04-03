@@ -1,0 +1,228 @@
+.recs-page {
+    min-height: 100vh;
+}
+
+.recs-page__inner {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 2.5rem 2rem 6rem;
+}
+
+/* Header */
+.recs-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    margin-bottom: 2.5rem;
+    flex-wrap: wrap;
+}
+
+.back-btn {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    background: none;
+    border: 1px solid var(--border-md);
+    border-radius: var(--radius-sm);
+    padding: 7px 14px;
+    color: var(--text-2);
+    font-family: "Outfit", sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition);
+}
+
+.back-btn:hover {
+    color: var(--text);
+    border-color: var(--text-3);
+}
+
+.recs-source {
+    font-size: 13px;
+    color: var(--text-3);
+}
+
+.recs-source span {
+    color: var(--text-2);
+    font-weight: 500;
+}
+
+/* Loading */
+.recs-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 3rem 0 2rem;
+}
+
+.recs-loading__spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid var(--border-md);
+    border-top-color: var(--orange);
+    border-radius: 50%;
+    animation: spin 700ms linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.recs-loading__text {
+    font-family: "Bebas Neue", sans-serif;
+    font-size: 22px;
+    letter-spacing: 0.08em;
+    color: var(--text);
+}
+
+.recs-loading__sub {
+    font-size: 14px;
+    color: var(--text-3);
+}
+
+/* Skeleton */
+.skeleton-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 14px;
+    margin-top: 1.5rem;
+}
+
+.skeleton-card {
+    height: 360px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    animation: shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+    0%, 100% { opacity: 0.35; }
+    50%       { opacity: 0.7; }
+}
+
+/* Controls */
+.recs-controls {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.recs-title {
+    font-family: "Bebas Neue", sans-serif;
+    font-size: 42px;
+    letter-spacing: 0.05em;
+    color: var(--text);
+    line-height: 1;
+}
+
+.recs-title span {
+    color: var(--text-3);
+    font-size: 32px;
+}
+
+.recs-controls__right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.genre-filter {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.genre-btn {
+    padding: 6px 13px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    color: var(--text-2);
+    font-family: "Outfit", sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition);
+}
+
+.genre-btn:hover {
+    border-color: var(--border-md);
+    color: var(--text);
+}
+
+.genre-btn--active {
+    background: var(--orange-dim);
+    border-color: rgba(255, 107, 53, 0.35);
+    color: var(--orange);
+}
+
+.btn-more {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    background: var(--card);
+    border: 1px solid var(--border-md);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-family: "Outfit", sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all var(--transition);
+}
+
+.btn-more:hover {
+    border-color: var(--orange);
+    color: var(--orange);
+    background: var(--orange-dim);
+}
+
+/* Grid */
+.recs-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 14px;
+}
+
+/* Empty */
+.recs-empty {
+    padding: 4rem 0;
+    text-align: center;
+    color: var(--text-3);
+    font-size: 15px;
+}
+
+.btn-reset {
+    margin-top: 1rem;
+    padding: 8px 20px;
+    background: none;
+    border: 1px solid var(--border-md);
+    border-radius: var(--radius-sm);
+    color: var(--text-2);
+    font-family: "Outfit", sans-serif;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all var(--transition);
+}
+
+.btn-reset:hover {
+    color: var(--text);
+    border-color: var(--text-3);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .recs-page__inner { padding: 2rem 1rem 4rem; }
+    .recs-controls { flex-direction: column; }
+    .recs-grid, .skeleton-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
+}
