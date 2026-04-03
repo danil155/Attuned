@@ -1,6 +1,7 @@
 import logging
 import math
 import numpy as np
+from sqlalchemy import select
 
 from db_service.connection import Database
 from db_service.models import Game
@@ -52,9 +53,7 @@ class RecommendationService:
                 limit=candidate_limit
             )
 
-            liked_rows = await repo.get_embeddings_by_igdb_ids(request.liked_igdb_ids)
             liked_game_data = await _get_liked_game_tags(session, request.liked_igdb_ids)
-
             max_rating_count = await repo.get_max_rating_count()
 
         scored = _score_candidates(
@@ -64,7 +63,7 @@ class RecommendationService:
             max_rating_count=max_rating_count
         )
 
-        scored.sort(key=lambda x: x[1], reverse=True)
+        scored.sort(key=lambda x: x[1]['final'], reverse=True)
         top = scored[:request.limit]
 
         items = [_to_response(game, scores) for game, scores in top]
@@ -149,9 +148,6 @@ def _niche_boost(game: Game, max_rating_count: int) -> float:
 
 
 async def _get_liked_game_tags(session, liked_igdb_ids: list[int]) -> list[dict]:
-    from sqlalchemy import select
-    from db_service.models import Game
-
     result = await session.execute(
         select(
             Game.igdb_id,

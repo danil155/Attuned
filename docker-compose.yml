@@ -37,6 +37,8 @@ services:
       IGDB_CLIENT_SECRET: ${IGDB_CLIENT_SECRET}
     volumes:
       - model_cache:/cache/huggingface
+    ports:
+      - "8000:8000"
 
   pgadmin:
     image: dpage/pgadmin4

@@ -1,17 +1,20 @@
-import asyncio
 import logging
-import signal
 import sys
-from typing import Optional
+from typing import AsyncGenerator
+import uvicorn
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from config import load_db_config, load_igdb_config
+from api import games, recommendations
 from db_service.connection import Database
 from db_service.migrations import run_migrations
 from igdb_service.client import IGDBClient
 from sync_service.syncer import SyncService
 from embedding_service.embedder import EmbeddingService
+from recommendation_service.recommender import RecommendationService
 
 logger = logging.getLogger(__name__)
 
@@ -30,86 +33,88 @@ def setup_logging() -> None:
     logging.getLogger('sqlalchemy').setLevel(logging.WARNING)
 
 
-class App:
-    def __init__(self) -> None:
-        self._db: Optional[Database] = None
-        self._sync_service: Optional[SyncService] = None
-        self._embedding_service: Optional[EmbeddingService] = None
-        self._scheduler: Optional[AsyncIOScheduler] = None
-
-    async def start(self) -> None:
-        logger.info('Starting Attuned backend')
-
-        self._db = Database(load_db_config())
-        await run_migrations(self._db.engine)
-        logger.info('Database ready')
-
-        self._sync_service = SyncService(
-            igdb_client=IGDBClient(load_igdb_config()),
-            db=self._db
-        )
-
-        self._embedding_service = EmbeddingService(db=self._db)
-
-        await self._run_sync_then_embed()
-
-        self._scheduler = AsyncIOScheduler()
-        self._scheduler.add_job(
-            self._run_sync_then_embed,
-            trigger=CronTrigger(hour=SYNC_HOUR, minute=SYNC_MINUTE, timezone='Europe/Moscow'),
-            id='sync_and_embed',
-            name='IGDB sync + embedding',
-            max_instances=1,
-            misfire_grace_time=600
-        )
-
-        self._scheduler.start()
-        logger.info(f'Scheduler started: nightly sync at {SYNC_HOUR:02d}:{SYNC_MINUTE:02d} Moscow')
-
-    async def stop(self) -> None:
-        logger.info('Shutting down')
-
-        if self._scheduler and self._scheduler.running:
-            self._scheduler.shutdown(wait=False)
-        if self._db:
-            await self._db.close()
-        logger.info('Shutdown complete')
-
-    async def _run_sync_then_embed(self) -> None:
-        await self._run_sync()
-        await self._run_embedding()
-
-    async def _run_sync(self) -> None:
-        try:
-            await self._sync_service.run()
-        except Exception:
-            logger.exception('Sync failed, will retry on next schedule')
-
-    async def _run_embedding(self) -> None:
-        try:
-            await self._embedding_service.run()
-        except Exception:
-            logger.exception('Embedding failed, will retry on next schedule')
-
-
-async def main() -> None:
+async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     setup_logging()
-    app = App()
+    logger.info('Starting Attuned backend')
 
-    stop_event = asyncio.Event()
+    db = Database(load_db_config())
+    await run_migrations(db.engine)
+    logger.info('Database ready')
 
-    def _on_signal(*_) -> None:
-        logger.info('Signal received, stopping')
-        stop_event.set()
+    sync_service = SyncService(igdb_client=IGDBClient(load_igdb_config()), db=db)
+    embedding_service = EmbeddingService(db=db)
+    recommendation_service = RecommendationService(db=db)
 
-    signal.signal(signal.SIGINT, _on_signal)
-    signal.signal(signal.SIGTERM, _on_signal)
+    app.state.db = db
+    app.state.recommendation_service = recommendation_service
 
-    await app.start()
+    await _run_sync(sync_service)
+    await _run_embedding(embedding_service)
 
-    await stop_event.wait()
-    await app.stop()
+    scheduler = AsyncIOScheduler()
+    scheduler.add_job(
+        lambda: _run_sync_then_embed(sync_service, embedding_service),
+        trigger=CronTrigger(hour=SYNC_HOUR, minute=SYNC_MINUTE, timezone='Europe/Moscow'),
+        id='nightly_sync_and_embed',
+        name='IGDB sync + embedding',
+        max_instances=1,
+        misfire_grace_time=600
+    )
+    scheduler.start()
+    logger.info(f'Scheduler started: nightly sync at {SYNC_HOUR:02d}:{SYNC_MINUTE:02d} Moscow')
 
+    yield
+
+    logger.info('Shutting down')
+    scheduler.shutdown(wait=False)
+    await db.close()
+    logger.info('Shutdown complete')
+
+
+async def _run_sync(sync_service: SyncService) -> None:
+    try:
+        await sync_service.run()
+    except Exception:
+        logger.exception('Sync failed, will retry on next schedule')
+
+
+async def _run_embedding(embedding_service: EmbeddingService) -> None:
+    try:
+        await embedding_service.run()
+    except Exception:
+        logger.exception('Embedding failed, will retry on next schedule')
+
+
+async def _run_sync_then_embed(sync_service: SyncService, embedding_service: EmbeddingService) -> None:
+    await _run_sync(sync_service)
+    await _run_embedding(embedding_service)
+
+
+def create_app() -> FastAPI:
+    app = FastAPI(
+        title='Attuned API',
+        lifespan=lifespan
+    )
+
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=['*'],
+        allow_methods=['*'],
+        allow_headers=['*']
+    )
+
+    app.include_router(recommendations.router, prefix='/api')
+    app.include_router(games.router, prefix='/api')
+
+    return app
+
+
+app = create_app()
 
 if __name__ == '__main__':
-    asyncio.run(main())
+    uvicorn.run(
+        'main:app',
+        host='0.0.0.0',
+        port=8000,
+        reload=False
+    )

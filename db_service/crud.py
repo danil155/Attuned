@@ -143,6 +143,21 @@ class RecommendationCrud:
         return result.scalar_one() or 1
 
 
+class SearchCrud:
+    def __init__(self, session: AsyncSession) -> None:
+        self._session = session
+
+    async def search_by_name(self, query: str, limit: int = 20) -> list[Game]:
+        result = await self._session.execute(
+            select(Game)
+            .where(Game.name.bool_op('%')(query), Game.embedding.is_not(None))
+            .order_by(func.similarity(Game.name, query).desc())
+            .limit(limit)
+        )
+
+        return list(result.scalars().all())
+
+
 def _game_to_dict(game: IGDBGame) -> dict:
     return {
         'igdb_id': game.id,
