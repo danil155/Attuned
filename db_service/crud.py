@@ -1,7 +1,7 @@
 import logging
 from datetime import datetime
 from typing import Optional
-from sqlalchemy import func, select, text, update
+from sqlalchemy import func, select, update, Float
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -111,6 +111,36 @@ class EmbeddingCrud:
         )
 
         return result.scalar_one()
+
+
+class RecommendationCrud:
+    def __init__(self, session: AsyncSession):
+        self._session = session
+
+    async def get_embeddings_by_igdb_ids(self, igdb_ids: list[int]) -> list[tuple[int, list[float]]]:
+        result = await self._session.execute(
+            select(Game.igdb_id, Game.embedding)
+            .where(Game.igdb_id.in_(igdb_ids), Game.embedding.is_not(None))
+        )
+
+        return [(row.igdb_id, row.embedding) for row in result.all()]
+
+    async def find_similar(self, embedding: list[float], exclude_igdb_ids: list[int], limit: int) -> list[Game]:
+        stmt = (select(Game)
+                .where(Game.embedding.is_not(None), Game.igdb_id.not_in(exclude_igdb_ids) if exclude_igdb_ids else True)
+                .order_by(Game.embedding.op('<=>', return_type=Float)(embedding))
+                .limit(limit)
+                )
+        result = await self._session.execute(stmt)
+
+        return list(result.scalars().all())
+
+    async def get_max_rating_count(self) -> int:
+        result = await self._session.execute(
+            select(func.max(Game.rating_count))
+        )
+
+        return result.scalar_one() or 1
 
 
 def _game_to_dict(game: IGDBGame) -> dict:
