@@ -23,12 +23,16 @@ class IGDBNamedEntity(BaseModel):
 class IGDBCover(BaseModel):
     url: Optional[str] = None
 
+    @field_validator('url', mode='before')
     @classmethod
     def fix_cover_url(cls, v: Optional[str]) -> Optional[str]:
-        if v and v.startswith('//'):
-            return 'https:' + v
+        if not v:
+            return v
 
-        return v
+        if v.startswith('//'):
+            v = 'https:' + v
+
+        return v.replace('/t_thumb/', '/t_cover_big/')
 
 
 class IGDBGame(BaseModel):

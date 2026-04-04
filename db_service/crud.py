@@ -23,9 +23,13 @@ class GameCrud:
         rows = [_game_to_dict(g) for g in games]
 
         stmt = insert(Game).values(rows)
+
+        update_cols = {col: stmt.excluded[col] for col in rows[0] if col != 'igdb_id'}
+        update_cols['embedding'] = None
+
         stmt = stmt.on_conflict_do_update(
             index_elements=['igdb_id'],
-            set_={col: stmt.excluded[col] for col in rows[0] if col != 'igdb_id'}
+            set_=update_cols,
         )
 
         await self._session.execute(stmt)
