@@ -9,9 +9,10 @@ class RecommendationRequest(BaseModel):
     disliked_igdb_ids: list[int] = Field(default_factory=list)
     seen_igdb_ids: list[int] = Field(default_factory=list)
     limit: int = Field(default=DEFAULT_LIMIT, ge=1, le=MAX_TOTAL)
+    only_released: bool = True
 
     @model_validator(mode='after')
-    def check_total_limit(self):
+    def check_total_limit(self) -> "RecommendationRequest":
         already_seen = len(self.seen_igdb_ids)
         if already_seen >= MAX_TOTAL:
             raise ValueError(f'Maximum of {MAX_TOTAL} recommendations per session reached')
@@ -31,7 +32,6 @@ class RecommendedGame(BaseModel):
     platforms: list[str]
     rating: float | None
     first_release_date: str | None
-
     match_percent: int
 
 

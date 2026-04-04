@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 from sqlalchemy import func, select, update, Float
 from sqlalchemy.dialects.postgresql import insert
@@ -129,9 +129,24 @@ class RecommendationCrud:
 
         return [(row.igdb_id, row.embedding) for row in result.all()]
 
-    async def find_similar(self, embedding: list[float], exclude_igdb_ids: list[int], limit: int) -> list[Game]:
+    async def find_similar(self,
+                           embedding: list[float],
+                           exclude_igdb_ids: list[int],
+                           limit: int,
+                           only_released: bool = True,
+                           min_rating_count: int = 10) -> list[Game]:
+        filters = [
+            Game.embedding.is_not(None),
+            Game.igdb_id.not_in(exclude_igdb_ids) if exclude_igdb_ids else True,
+            Game.rating_count >= min_rating_count,
+        ]
+
+        if only_released:
+            now = datetime.now(timezone.utc)
+            filters.append(Game.first_release_date <= now)
+
         stmt = (select(Game)
-                .where(Game.embedding.is_not(None), Game.igdb_id.not_in(exclude_igdb_ids) if exclude_igdb_ids else True)
+                .where(*filters)
                 .order_by(Game.embedding.op('<=>', return_type=Float)(embedding))
                 .limit(limit)
                 )

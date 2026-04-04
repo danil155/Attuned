@@ -10,9 +10,9 @@ from recommendation_service.schemas import MAX_TOTAL, RecommendationRequest, Rec
 
 logger = logging.getLogger(__name__)
 
-ALPHA = 0.5     # semantic_score
-BETA = 0.3      # tags_score
-GAMMA = 0.2     # niche_boost
+ALPHA = 0.6     # semantic_score
+BETA = 0.35     # tags_score
+GAMMA = 0.05    # niche_boost
 
 CANDIDATE_MULTIPLIER = 10
 
