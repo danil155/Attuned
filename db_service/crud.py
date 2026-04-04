@@ -157,6 +157,14 @@ class SearchCrud:
 
         return list(result.scalars().all())
 
+    async def search_by_id(self, igdb_id: int) -> Game | None:
+        result = await self._session.execute(
+            select(Game)
+            .where(Game.igdb_id == igdb_id)
+        )
+
+        return result.scalar_one_or_none()
+
 
 def _game_to_dict(game: IGDBGame) -> dict:
     return {
