@@ -35,6 +35,8 @@ class Game(Base):
     platforms: Mapped[list[str]] = mapped_column(ARRAY(Text), server_default='{}', nullable=False)
     developers: Mapped[list[str]] = mapped_column(ARRAY(Text), server_default='{}', nullable=False)
 
+    summary_small: Mapped[str | None] = mapped_column(Text)
+
     embedding: Mapped[list[float] | None] = mapped_column(Vector(EMBEDDINGS_DIM), nullable=True)
 
     rating: Mapped[float | None] = mapped_column(Float)

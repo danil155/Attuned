@@ -176,7 +176,7 @@ def _to_response(game: Game, scores: dict) -> RecommendedGame:
     return RecommendedGame(
         igdb_id=game.igdb_id,
         name=game.name,
-        summary=game.summary,
+        summary_small=game.summary_small,
         cover_url=game.cover_url,
         igdb_url=game.igdb_url,
         genres=game.genres or [],

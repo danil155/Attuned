@@ -31,6 +31,7 @@ def setup_logging() -> None:
 
     logging.getLogger('apscheduler').setLevel(logging.WARNING)
     logging.getLogger('sqlalchemy').setLevel(logging.WARNING)
+    logging.getLogger('httpx').setLevel(logging.WARNING)
 
 
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
@@ -85,7 +86,8 @@ async def _run_embedding(embedding_service: EmbeddingService) -> None:
         logger.exception('Embedding failed, will retry on next schedule')
 
 
-async def _run_sync_then_embed(sync_service: SyncService, embedding_service: EmbeddingService) -> None:
+async def _run_sync_then_embed(sync_service: SyncService,
+                               embedding_service: EmbeddingService) -> None:
     await _run_sync(sync_service)
     await _run_embedding(embedding_service)
 

@@ -25,7 +25,7 @@ class RecommendationRequest(BaseModel):
 class RecommendedGame(BaseModel):
     igdb_id: int
     name: str
-    summary: str | None
+    summary_small: str | None
     cover_url: str | None
     igdb_url: str | None
     genres: list[str]

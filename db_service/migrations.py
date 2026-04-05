@@ -32,11 +32,6 @@ async def run_migrations(engine: AsyncEngine) -> None:
 
         await conn.run_sync(Base.metadata.create_all)
 
-        await conn.execute(text(f"""
-        ALTER TABLE games
-        ADD COLUMN IF NOT EXISTS embedding vector({EMBEDDINGS_DIM})
-        """))
-
         for stmt in _GIN_INDEXES:
             await conn.execute(text(stmt))
 

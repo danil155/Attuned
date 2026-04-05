@@ -1,4 +1,5 @@
 import logging
+import re
 from datetime import datetime, timezone
 from typing import Optional
 from sqlalchemy import func, select, update, Float
@@ -185,6 +186,37 @@ class SearchCrud:
         return result.scalar_one_or_none()
 
 
+def extract_short_summary(summary: str | None, max_len: int = 110) -> str | None:
+    if not summary:
+        return ''
+
+    clean_text = ' '.join(summary.split())
+
+    sentences = re.split(r'[.!?]+', clean_text)
+    first_sentence = ''
+    for sent in sentences:
+        sent = sent.strip()
+        if len(sent) > 10:
+            first_sentence = sent
+            break
+
+    if not first_sentence:
+        first_sentence = clean_text[:max_len]
+
+    if len(first_sentence) > max_len:
+        truncated = first_sentence[:max_len]
+        last_space = truncated.rfind(' ')
+        if last_space > max_len // 2:
+            first_sentence = truncated[:last_space] + '...'
+        else:
+            first_sentence = truncated + '...'
+
+    if first_sentence and first_sentence[0].islower():
+        first_sentence = first_sentence[0].upper() + first_sentence[1:]
+
+    return first_sentence
+
+
 def _game_to_dict(game: IGDBGame) -> dict:
     return {
         'igdb_id': game.id,
@@ -200,9 +232,10 @@ def _game_to_dict(game: IGDBGame) -> dict:
         'themes': [e.name for e in game.themes],
         'keywords': [e.name for e in game.keywords],
         'game_modes': [e.name for e in game.game_modes],
-        'player_perspectives': [e.name for e in game.played_perspectives],
+        'player_perspectives': [e.name for e in game.player_perspectives],
         'platforms': [e.name for e in game.platforms],
         'developers': game.developers,
+        'summary_small': extract_short_summary(game.summary),
         'rating': game.rating,
         'rating_count': game.rating_count,
         'aggregated_rating': game.aggregated_rating,

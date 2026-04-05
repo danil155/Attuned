@@ -50,7 +50,7 @@ class IGDBGame(BaseModel):
     themes: list[IGDBNamedEntity] = Field(default_factory=list)
     keywords: list[IGDBNamedEntity] = Field(default_factory=list)
     game_modes: list[IGDBNamedEntity] = Field(default_factory=list)
-    played_perspectives: list[IGDBNamedEntity] = Field(default_factory=list)
+    player_perspectives: list[IGDBNamedEntity] = Field(default_factory=list)
     platforms: list[IGDBNamedEntity] = Field(default_factory=list)
     involved_companies: list[IGDBInvolvedCompany] = Field(default_factory=list)
 
