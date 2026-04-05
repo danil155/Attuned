@@ -2,7 +2,8 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useApp } from "../../context/AppContext";
 import SearchDropdown from "../../components/games/SearchDropdown";
-import { GAMES, STARTER_PACKS, getRecommendations } from "../../data/mockData";
+import { STARTER_PACKS } from "../../data/mockData";
+import { getRecommendations, searchGamesByIds } from "../../api";
 import "./Profile.css";
 
 export default function Profile() {
@@ -19,6 +20,7 @@ export default function Profile() {
     const [addingBasket, setAddingBasket] = useState(false);
     const [editingId, setEditingId] = useState(null);
     const [editName, setEditName] = useState("");
+    const [loading, setLoading] = useState(false);
 
     const activeBasket = getBasket(activeBasketId);
 
@@ -39,12 +41,24 @@ export default function Profile() {
         setEditingId(null);
     };
 
-    const handleGenerate = (basket) => {
+    const handleGenerate = async (basket) => {
         if (!basket.games.length) return;
-        const recs = getRecommendations(8);
-        sessionStorage.setItem("attuned_recs", JSON.stringify(recs));
-        sessionStorage.setItem("attuned_source", JSON.stringify(basket.games.map((g) => g.title)));
-        navigate("/recommendations");
+
+        setLoading(true);
+        try {
+            const recs = await getRecommendations({
+                liked_igdb_ids: basket.games.map(g => g.id),
+                limit: 8
+            });
+
+            sessionStorage.setItem("attuned_recs", JSON.stringify(recs));
+            sessionStorage.setItem("attuned_source", JSON.stringify(basket.games.map((g) => g.title)));
+            navigate("/recommendations");
+        } catch (error) {
+            console.error(error);
+        } finally {
+            setLoading(false);
+        }
     };
 
     const canAddBasket = baskets.length < limits.baskets;
@@ -170,17 +184,17 @@ export default function Profile() {
                         {activeBasket.games.length > 0 ? (
                             <div className="basket-games">
                                 {activeBasket.games.map((g) => (
-                                    <div key={g.id} className="basket-row">
-                                        <div className="basket-row__cover" style={{ backgroundImage: `url(${g.cover})` }}>
-                                            <span>{g.title[0]}</span>
+                                    <div key={g.igdb_id} className="basket-row">
+                                        <div className="basket-row__cover" style={{ backgroundImage: `url(${g.cover_url})` }}>
+                                            <span>{g.name ? g.name[0] : "?"}</span>
                                         </div>
                                         <div className="basket-row__info">
-                                            <span className="basket-row__title">{g.title}</span>
-                                            <span className="basket-row__meta">{g.genre.join(" · ")} · {g.year}</span>
+                                            <span className="basket-row__title">{g.name}</span>
+                                            <span className="basket-row__meta">{g.genres ? g.genres.join(" · ") : ""} · {g.first_release_date}</span>
                                         </div>
                                         <button
                                             className="icon-btn icon-btn--danger"
-                                            onClick={() => removeGameFromBasket(activeBasket.id, g.id)}
+                                            onClick={() => removeGameFromBasket(activeBasket.id, g.igdb_id)}
                                             title="Убрать из коллекции"
                                         >
                                             <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
@@ -194,15 +208,27 @@ export default function Profile() {
                             /* EMPTY STATE — STARTER PACKS */
                             <div className="empty-state">
                                 <p className="empty-state__title">Коллекция пуста</p>
-                                <p className="empty-state__sub">Добавь игры вручную или выбери стартовый набор:</p>
+                                <p className="empty-state__sub">
+                                    {loading ? "Загрузка пака..." : "Добавь игры вручную или выбери стартовый набор:"}
+                                </p>
                                 <div className="packs-grid">
                                     {STARTER_PACKS.map((pack) => (
                                         <button
                                             key={pack.id}
                                             className="pack-pill"
-                                            onClick={() => {
-                                                const games = pack.gameIds.map((id) => GAMES.find((g) => g.id === id)).filter(Boolean);
-                                                fillBasketFromPack(activeBasket.id, games);
+                                            disabled={loading}
+                                            onClick={async () => {
+                                                setLoading(true);
+                                                try {
+                                                    const result = await searchGamesByIds(pack.gameIds);
+                                                    if (result) {
+                                                        fillBasketFromPack(activeBasket.id, result);
+                                                    }
+                                                } catch (err) {
+                                                    console.error(err);
+                                                } finally {
+                                                    setLoading(false);
+                                                }
                                             }}
                                         >
                                             <span>{pack.emoji}</span>

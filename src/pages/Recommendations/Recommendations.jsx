@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
+import {useState, useEffect, use} from "react";
 import { useNavigate } from "react-router-dom";
 import GameCard from "../../components/games/GameCard";
-import { getRecommendations } from "../../data/mockData";
+import { getRecommendations } from "../../api";
 import "./Recommendations.css";
 
 const GENRES = ["Все", "RPG", "Action", "Indie", "Soulslike", "Open World", "Roguelite", "Adventure"];
@@ -14,40 +14,53 @@ export default function Recommendations() {
     const [loading, setLoading] = useState(true);
     const [ratings, setRatings] = useState({});
     const [genreFilter, setGenreFilter] = useState("Все");
+    const [sourceIds, setSourceIds] = useState([]);
 
     useEffect(() => {
         const stored = sessionStorage.getItem("attuned_recs");
         const storedSource = sessionStorage.getItem("attuned_source");
+        const storedSourceIds = sessionStorage.getItem("attuned_source_ids");
 
         if (!stored) {
             navigate("/");
             return;
         }
 
-        // Simulate loading for feel
         setTimeout(() => {
             setRecs(JSON.parse(stored));
             if (storedSource) setSource(JSON.parse(storedSource));
+            if (storedSourceIds) setSourceIds(JSON.parse(storedSourceIds));
             setLoading(false);
         }, 1800);
     }, [navigate]);
 
     const handleDislike = (id) => {
-        setRecs((prev) => prev.filter((r) => r.id !== id));
+        setRecs((prev) => prev.filter((r) => r.igdb_id !== id));
     };
 
     const handleRate = (id, val) => {
         setRatings((prev) => ({ ...prev, [id]: val }));
     };
 
-    const addMore = () => {
-        const extra = getRecommendations(4).map((r) => ({ ...r, id: r.id + Date.now() }));
-        setRecs((prev) => [...prev, ...extra]);
+    const addMore = async () => {
+        try {
+            const extra = await getRecommendations({
+                liked_igdb_ids: sourceIds,
+                seen_igdb_ids: (recs?.items || recs || []).map(r => r.igdb_id),
+                limit: 4,
+            });
+
+            if (extra && extra.length > 0) {
+                setRecs((prev) => [...prev, ...extra]);
+            }
+        } catch (error) {
+            console.error("Error when uploading recommendations:", error);
+        }
     };
 
     const filtered = genreFilter === "Все"
         ? recs
-        : recs.filter((r) => r.genre.includes(genreFilter));
+        : (recs?.items || recs || []).filter((r) => r.genres && r.genres.includes(genreFilter));
 
     return (
         <div className="recs-page">
@@ -118,11 +131,11 @@ export default function Recommendations() {
                             </div>
                         ) : (
                             <div className="recs-grid">
-                                {filtered.map((r, i) => (
+                                {(filtered?.items || filtered || []).map((r, i) => (
                                     <GameCard
-                                        key={r.id}
+                                        key={r.igdb_id}
                                         game={r}
-                                        rating={ratings[r.id] || 0}
+                                        rating={ratings[r.igdb_id] || 0}
                                         onRate={handleRate}
                                         onDislike={handleDislike}
                                     />

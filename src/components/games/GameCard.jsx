@@ -8,33 +8,33 @@ export default function GameCard({ game, rating = 0, onRate, onDislike }) {
 
     const handleDislike = () => {
         setDismissed(true);
-        setTimeout(() => onDislike?.(game.id), 320);
+        setTimeout(() => onDislike?.(game.igdb_id), 320);
     };
 
     return (
         <article className={`game-card ${dismissed ? "game-card--out" : ""}`}>
             <div className="game-card__match">
-                <span className="match-score">{game.matchScore}%</span>
+                <span className="match-score">{game.match_percent}%</span>
                 <span className="match-label">совпадение</span>
             </div>
 
-            <div className="game-card__cover" style={{ backgroundImage: `url(${game.cover})` }}>
-                <span className="game-card__cover-fallback">{game.title[0]}</span>
+            <div className="game-card__cover" style={{ backgroundImage: `url(${game.cover_url.replace('t_thumb', 't_cover_big')})` }}>
+                <span className="game-card__cover-fallback">{game.name[0]}</span>
                 <div className="game-card__rating-badge">{game.rating}</div>
             </div>
 
             <div className="game-card__body">
-                <h3 className="game-card__title">{game.title}</h3>
-                {game.reason && <p className="game-card__reason">{game.reason}</p>}
+                <h3 className="game-card__title">{game.name}</h3>
+                {game.summary_small && <p className="game-card__reason">{game.summary_small}</p>}
 
                 <div className="game-card__genres">
-                    {game.genre.map((g) => (
+                    {game.genres.map((g) => (
                         <span key={g} className="genre-pill">{g}</span>
                     ))}
                 </div>
 
                 <div className="game-card__footer">
-                    <StarRating value={rating} onChange={(v) => onRate?.(game.id, v)} />
+                    <StarRating value={rating} onChange={(v) => onRate?.(game.igdb_id, v)} />
                     <div className="game-card__actions">
                         <button
                             className={`action-btn action-btn--like ${liked ? "action-btn--liked" : ""}`}

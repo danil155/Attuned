@@ -1,28 +1,44 @@
-import { useState, useEffect, useRef } from "react";
-import { GAMES } from "../../data/mockData";
+import {useState, useEffect, useRef, use} from "react";
 import "./SearchDropdown.css";
+import { searchGames } from "../../api";
 
 export default function SearchDropdown({ excludeIds = [], onSelect, placeholder = "Найди игру…", disabled = false }) {
     const [query, setQuery] = useState("");
     const [open, setOpen] = useState(false);
+    const [results, setResults] = useState([]);
+    const [loading, setLoading] = useState(false);
     const wrapRef = useRef(null);
     const inputRef = useRef(null);
 
-    const results = query.length >= 2
-        ? GAMES.filter(
-            (g) =>
-                g.title.toLowerCase().includes(query.toLowerCase()) &&
-                !excludeIds.includes(g.id)
-        ).slice(0, 7)
-        : [];
+    useEffect(() => {
+        if (query.length < 2) {
+            setResults([]);
+            return;
+        }
+
+        const timer = setTimeout(async () => {
+            setLoading(true);
+            try {
+                const data = await searchGames(query, 10);
+                const gamesArray = data.items || [];
+                setResults(gamesArray.filter(g => !excludeIds.includes(g.igdb_id)));
+            } catch (error) {
+                console.error("Search error: ", error);
+            } finally {
+                setLoading(false);
+            }
+        }, 400);
+
+        return () => clearTimeout(timer);
+    }, [query, excludeIds]);
 
     useEffect(() => {
         const handler = (e) => {
             if (wrapRef.current && !wrapRef.current.contains(e.target)) {
                 setOpen(false);
-                setQuery("");
             }
         };
+
         document.addEventListener("mousedown", handler);
         return () => document.removeEventListener("mousedown", handler);
     }, []);
@@ -60,17 +76,19 @@ export default function SearchDropdown({ excludeIds = [], onSelect, placeholder 
 
             {open && query.length >= 2 && (
                 <div className="sd-dropdown">
-                    {results.length === 0 ? (
+                    {loading ? (
+                        <p className="sd-empty">Загрузка...</p>
+                    ): results.length === 0 ? (
                         <p className="sd-empty">Игра не найдена</p>
                     ) : (
                         results.map((g) => (
-                            <button key={g.id} className="sd-item" onClick={() => handleSelect(g)}>
-                                <div className="sd-cover" style={{ backgroundImage: `url(${g.cover})` }}>
-                                    <span>{g.title[0]}</span>
+                            <button key={g.igdb_id} className="sd-item" onClick={() => handleSelect(g)}>
+                                <div className="sd-cover" style={{ backgroundImage: `url(${g.cover_url})` }}>
+                                    <span>{g.name ? g.name[0] : "?"}</span>
                                 </div>
                                 <div className="sd-info">
-                                    <span className="sd-title">{g.title}</span>
-                                    <span className="sd-meta">{g.genre.join(" · ")} · {g.year}</span>
+                                    <span className="sd-title">{g.name}</span>
+                                    <span className="sd-meta">{g.genres.join(" · ")} · {g.first_release_date}</span>
                                 </div>
                                 <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" className="sd-arrow">
                                     <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z" />
