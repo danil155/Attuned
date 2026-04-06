@@ -143,7 +143,7 @@ class RecommendationCrud:
         ]
 
         if only_released:
-            now = datetime.now(timezone.utc)
+            now = datetime.now(timezone.utc).replace(tzinfo=None)
             filters.append(Game.first_release_date <= now)
 
         stmt = (select(Game)

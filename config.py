@@ -11,6 +11,7 @@ class IGDBConfig:
     client_secret: str
     base_url: str = 'https://api.igdb.com/v4'
     auth_url: str = 'https://id.twitch.tv/oauth2/token'
+    genres_url: str = 'https://api.igdb.com/v4/genres'
     rate_limit_rps: float = 4.0
     batch_size: int = 500
 

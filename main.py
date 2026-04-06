@@ -8,7 +8,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from config import load_db_config, load_igdb_config
-from api import games, recommendations
+from api import games, recommendations, genres
 from db_service.connection import Database
 from db_service.migrations import run_migrations
 from igdb_service.client import IGDBClient
@@ -19,6 +19,7 @@ from recommendation_service.recommender import RecommendationService
 logger = logging.getLogger(__name__)
 
 SYNC_HOUR, SYNC_MINUTE = 2, 0
+GENRES_REFRESH_HOUR, GENRES_REFRESH_MINUTE = 14, 0
 
 
 def setup_logging() -> None:
@@ -42,15 +43,19 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     await run_migrations(db.engine)
     logger.info('Database ready')
 
-    sync_service = SyncService(igdb_client=IGDBClient(load_igdb_config()), db=db)
+    igdb_client = IGDBClient(load_igdb_config())
+
+    sync_service = SyncService(igdb_client=igdb_client, db=db)
     embedding_service = EmbeddingService(db=db)
     recommendation_service = RecommendationService(db=db)
 
+    app.state.igdb_client = igdb_client
     app.state.db = db
     app.state.recommendation_service = recommendation_service
 
     await _run_sync(sync_service)
     await _run_embedding(embedding_service)
+    await _refresh_genres(igdb_client)
 
     scheduler = AsyncIOScheduler()
     scheduler.add_job(
@@ -61,8 +66,17 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         max_instances=1,
         misfire_grace_time=600
     )
+    scheduler.add_job(
+        lambda: _refresh_genres(igdb_client),
+        trigger=CronTrigger(hour=GENRES_REFRESH_HOUR, minute=GENRES_REFRESH_MINUTE, timezone='Europe/Moscow'),
+        id='genres_refresh',
+        name='Refresh genres cache',
+        max_instances=1,
+        misfire_grace_time=300
+    )
     scheduler.start()
     logger.info(f'Scheduler started: nightly sync at {SYNC_HOUR:02d}:{SYNC_MINUTE:02d} Moscow')
+    logger.info(f'Scheduler started: refresh genres at {GENRES_REFRESH_HOUR:02d}:{GENRES_REFRESH_MINUTE:02d} Moscow')
 
     yield
 
@@ -70,6 +84,13 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     scheduler.shutdown(wait=False)
     await db.close()
     logger.info('Shutdown complete')
+
+
+async def _refresh_genres(igdb_client: IGDBClient) -> None:
+    try:
+        igdb_client.get_genres_list(force_refresh=True)
+    except Exception:
+        logger.exception('Failed to refresh genres cache')
 
 
 async def _run_sync(sync_service: SyncService) -> None:
@@ -107,6 +128,7 @@ def create_app() -> FastAPI:
 
     app.include_router(recommendations.router, prefix='/api')
     app.include_router(games.router, prefix='/api')
+    app.include_router(genres.router, prefix='/api')
 
     return app
 

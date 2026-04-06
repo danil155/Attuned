@@ -6,6 +6,7 @@ import requests
 
 from config import IGDBConfig
 from igdb_service.schemas import IGDBGame
+from igdb_service.genres_cache import GenresCache
 
 logger = logging.getLogger(__name__)
 
@@ -31,6 +32,7 @@ class IGDBClient:
         self._access_token: Optional[str] = None
         self._token_expires_at: Optional[str] = None
         self._last_request_at: float = 0.0
+        self._genres_cache = GenresCache()
 
     # используем пагинацию по id и выкачиваем все игры из IGDB
     def fetch_all_games(self) -> Generator[list[IGDBGame], None, None]:
@@ -81,6 +83,35 @@ class IGDBClient:
                 break
 
         logger.info(f'Incremental: sync complete: {total_fetched} games updated')
+
+    def get_genres_list(self, force_refresh: bool = False) -> list[str]:
+        if not force_refresh and not self._genres_cache.is_stale():
+            cached = self._genres_cache.get()
+
+            if cached:
+                return cached
+
+        logger.info('Fetching genres from IGDB API')
+        headers = {
+            'Client-ID': self._config.client_id,
+            'Authorization': f'Bearer {self._access_token}',
+        }
+
+        response = self._session.post(
+            self._config.genres_url,
+            headers=headers,
+            data=f'fields name; sort name asc; limit {self._config.batch_size};'
+        )
+
+        if response.status_code != 200:
+            raise Exception(f'Failed to fetch genres: {response.status_code} - {response.text}')
+
+        genres = response.json()
+        genres = [item['name'] for item in genres]
+        genres.insert(0, 'Все')
+        self._genres_cache.update(genres)
+
+        return genres
 
     # обновляем access_token
     def _refresh_access_token(self) -> None:
