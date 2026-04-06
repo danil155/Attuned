@@ -4,7 +4,7 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from sqlalchemy.sql import func
 from pgvector.sqlalchemy import Vector
 
-EMBEDDINGS_DIM = 384
+from config_vars import DBParameters
 
 
 class Base(DeclarativeBase):
@@ -37,7 +37,7 @@ class Game(Base):
 
     summary_small: Mapped[str | None] = mapped_column(Text)
 
-    embedding: Mapped[list[float] | None] = mapped_column(Vector(EMBEDDINGS_DIM), nullable=True)
+    embedding: Mapped[list[float] | None] = mapped_column(Vector(DBParameters.EMBEDDINGS_DIM), nullable=True)
 
     rating: Mapped[float | None] = mapped_column(Float)
     rating_count: Mapped[int | None] = mapped_column(Integer)

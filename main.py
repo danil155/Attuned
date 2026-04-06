@@ -8,6 +8,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from config import load_db_config, load_igdb_config
+from config_vars import MainParameters
 from api import games, recommendations, genres
 from db_service.connection import Database
 from db_service.migrations import run_migrations
@@ -17,9 +18,6 @@ from embedding_service.embedder import EmbeddingService
 from recommendation_service.recommender import RecommendationService
 
 logger = logging.getLogger(__name__)
-
-SYNC_HOUR, SYNC_MINUTE = 2, 0
-GENRES_REFRESH_HOUR, GENRES_REFRESH_MINUTE = 14, 0
 
 
 def setup_logging() -> None:
@@ -60,7 +58,9 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     scheduler = AsyncIOScheduler()
     scheduler.add_job(
         lambda: _run_sync_then_embed(sync_service, embedding_service),
-        trigger=CronTrigger(hour=SYNC_HOUR, minute=SYNC_MINUTE, timezone='Europe/Moscow'),
+        trigger=CronTrigger(hour=MainParameters.SYNC_HOUR,
+                            minute=MainParameters.SYNC_MINUTE,
+                            timezone='Europe/Moscow'),
         id='nightly_sync_and_embed',
         name='IGDB sync + embedding',
         max_instances=1,
@@ -68,15 +68,19 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     )
     scheduler.add_job(
         lambda: _refresh_genres(igdb_client),
-        trigger=CronTrigger(hour=GENRES_REFRESH_HOUR, minute=GENRES_REFRESH_MINUTE, timezone='Europe/Moscow'),
+        trigger=CronTrigger(hour=MainParameters.GENRES_REFRESH_HOUR,
+                            minute=MainParameters.GENRES_REFRESH_MINUTE,
+                            timezone='Europe/Moscow'),
         id='genres_refresh',
         name='Refresh genres cache',
         max_instances=1,
         misfire_grace_time=300
     )
     scheduler.start()
-    logger.info(f'Scheduler started: nightly sync at {SYNC_HOUR:02d}:{SYNC_MINUTE:02d} Moscow')
-    logger.info(f'Scheduler started: refresh genres at {GENRES_REFRESH_HOUR:02d}:{GENRES_REFRESH_MINUTE:02d} Moscow')
+    logger.info(f'Scheduler started: nightly sync at'
+                f'{MainParameters.SYNC_HOUR:02d}:{MainParameters.SYNC_MINUTE:02d} Moscow')
+    logger.info(f'Scheduler started: refresh genres at'
+                f'{MainParameters.GENRES_REFRESH_HOUR:02d}:{MainParameters.GENRES_REFRESH_MINUTE:02d} Moscow')
 
     yield
 

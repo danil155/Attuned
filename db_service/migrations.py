@@ -2,7 +2,7 @@ import logging
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncEngine
 
-from db_service.models import Base, EMBEDDINGS_DIM
+from db_service.models import Base
 
 logger = logging.getLogger(__name__)
 

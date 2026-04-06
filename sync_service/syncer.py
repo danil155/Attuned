@@ -4,10 +4,9 @@ from datetime import datetime, timedelta
 from db_service.connection import Database
 from db_service.crud import GameCrud, SyncLogCrud
 from igdb_service.client import IGDBClient
+from config_vars import SyncParameters
 
 logger = logging.getLogger(__name__)
-
-FULL_SYNC_THRESHOLD_DAYS = 1
 
 
 class SyncService:
@@ -24,7 +23,7 @@ class SyncService:
         use_full = (
             force_full
             or last_sync is None
-            or datetime.utcnow() - last_sync > timedelta(days=FULL_SYNC_THRESHOLD_DAYS)
+            or datetime.utcnow() - last_sync > timedelta(days=SyncParameters.FULL_SYNC_THRESHOLD_DAYS)
         )
 
         if use_full:

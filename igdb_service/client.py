@@ -5,24 +5,11 @@ from typing import Generator, Optional
 import requests
 
 from config import IGDBConfig
+from config_vars import IGDBParameters
 from igdb_service.schemas import IGDBGame
 from igdb_service.genres_cache import GenresCache
 
 logger = logging.getLogger(__name__)
-
-# main game, remake, remaster
-ALLOWED_GAME_TYPES = (0, 8, 9)
-
-GAME_FIELDS = ','.join([
-    'id', 'name', 'slug', 'summary', 'storyline', 'url', 'game_type', 'game_status', 'genres.name', 'themes.name',
-    'keywords.name', 'game_modes.name', 'player_perspectives.name', 'platforms.name', 'involved_companies.company.name',
-    'involved_companies.developer',
-    'cover.url',
-    'rating', 'rating_count',
-    'aggregated_rating', 'aggregated_rating_count',
-    'hypes',
-    'first_release_date', 'updated_at'
-])
 
 
 class IGDBClient:
@@ -175,9 +162,9 @@ class IGDBClient:
 
     # формирует запрос для получения всех игр, начиная с last_id
     def _fetch_games_after_id(self, last_id: int) -> list[dict]:
-        categories = ','.join(str(c) for c in ALLOWED_GAME_TYPES)
+        categories = ','.join(str(c) for c in IGDBParameters.ALLOWED_GAME_TYPES)
         body = f"""
-        fields {GAME_FIELDS};
+        fields {IGDBParameters.GAME_FIELDS};
         where id > {last_id} & game_type = ({categories}) & version_parent = null;
         sort id asc;
         limit {self._config.batch_size};
@@ -187,9 +174,9 @@ class IGDBClient:
 
     # формирует запрос для получения игр, обновленных после since
     def _fetch_games_updated_after(self, since_ts: int) -> list[dict]:
-        categories = ','.join(str(c) for c in ALLOWED_GAME_TYPES)
+        categories = ','.join(str(c) for c in IGDBParameters.ALLOWED_GAME_TYPES)
         body = f"""
-                fields {GAME_FIELDS};
+                fields {IGDBParameters.GAME_FIELDS};
                 where updated_at > {since_ts} & game_type = ({categories}) & version_parent = null;
                 sort updated_at asc;
                 limit {self._config.batch_size};
