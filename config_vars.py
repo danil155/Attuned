@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 
 @dataclass(frozen=True)
@@ -21,47 +21,49 @@ class IGDBParameters:
 
 @dataclass(frozen=True)
 class DBParameters:
-    EMBEDDINGS_DIM = 384
+    EMBEDDINGS_DIM: int = 384
 
 
 @dataclass(frozen=True)
 class EmbeddingParameters:
-    MODEL_NAME = 'all-MiniLM-L6-v2'
-    DB_BATH_SIZE = 512
-    MODEL_BATCH_SIZE = 64
+    MODEL_NAME: str = 'all-MiniLM-L6-v2'
+    DB_BATH_SIZE: int = 512
+    MODEL_BATCH_SIZE: int = 64
 
-    MAX_KEYWORDS = 50
+    MAX_KEYWORDS: int = 50
 
-    SEMANTIC_WEIGHT = 0.6
-    TAGS_WEIGHT = 0.4
+    SEMANTIC_WEIGHT: float = 0.6
+    TAGS_WEIGHT: float = 0.4
 
 
 @dataclass(frozen=True)
 class SyncParameters:
-    FULL_SYNC_THRESHOLD_DAYS = 1
+    FULL_SYNC_THRESHOLD_DAYS: int = 1
 
 
 @dataclass(frozen=True)
 class RecommendationParameters:
-    ALPHA = 0.6  # semantic_score
-    BETA = 0.35  # tags_score
-    GAMMA = 0.05  # niche_boost
+    ALPHA: float = 0.6  # semantic_score
+    BETA: float = 0.35  # tags_score
+    GAMMA: float = 0.05  # niche_boost
 
-    CANDIDATE_MULTIPLIER = 10
+    CANDIDATE_MULTIPLIER: int = 10
 
-    TAG_WEIGHTS = {
+    TAG_WEIGHTS: dict[str, float] = field(default_factory=lambda: {
         'keywords': 0.4,
         'themes': 0.3,
         'genres': 0.15,
         'game_modes': 0.1,
         'developers': 0.05
-    }
+    })
 
-    MAX_TOTAL = 30
-    DEFAULT_LIMIT = 10
+    MAX_TOTAL: int = 30
+    DEFAULT_LIMIT: int = 10
 
 
 @dataclass(frozen=True)
 class MainParameters:
-    SYNC_HOUR, SYNC_MINUTE = 2, 0
-    GENRES_REFRESH_HOUR, GENRES_REFRESH_MINUTE = 14, 0
+    SYNC_HOUR: int = 2
+    SYNC_MINUTE: int = 0
+    GENRES_REFRESH_HOUR: int = 14
+    GENRES_REFRESH_MINUTE: int = 0

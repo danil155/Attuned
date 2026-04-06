@@ -1,7 +1,6 @@
 import logging
 import re
 from datetime import datetime, timezone
-from typing import Optional
 from sqlalchemy import func, select, update, Float
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -37,7 +36,7 @@ class GameCrud:
 
         return len(rows)
 
-    async def get_last_sync_timestamp(self) -> Optional[datetime]:
+    async def get_last_sync_timestamp(self) -> datetime | None:
         result = await self._session.execute(
             select(func.max(Game.igdb_updated_at))
         )

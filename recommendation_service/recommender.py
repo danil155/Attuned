@@ -7,7 +7,7 @@ from db_service.connection import Database
 from db_service.models import Game
 from db_service.crud import RecommendationCrud
 from config_vars import RecommendationParameters
-from recommendation_service.schemas import MAX_TOTAL, RecommendationRequest, RecommendationResponse, RecommendedGame
+from recommendation_service.schemas import RecommendationRequest, RecommendationResponse, RecommendedGame
 
 logger = logging.getLogger(__name__)
 
@@ -59,7 +59,7 @@ class RecommendationService:
         return RecommendationResponse(
             items=items,
             total_seen=total_seen,
-            has_more=total_seen < MAX_TOTAL
+            has_more=total_seen < RecommendationParameters.MAX_TOTAL
         )
 
 

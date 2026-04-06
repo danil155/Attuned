@@ -24,13 +24,13 @@ class RecommendationRequest(BaseModel):
 class RecommendedGame(BaseModel):
     igdb_id: int
     name: str
-    summary_small: str | None
-    cover_url: str | None
-    igdb_url: str | None
+    summary_small: str | None = None
+    cover_url: str | None = None
+    igdb_url: str | None = None
     genres: list[str]
     platforms: list[str]
-    rating: float | None
-    first_release_date: str | None
+    rating: float | None = None
+    first_release_date: str | None = None
     match_percent: int
 
 

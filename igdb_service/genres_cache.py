@@ -1,6 +1,5 @@
 import logging
 from datetime import datetime
-from typing import Optional, List
 from threading import Lock
 
 logger = logging.getLogger(__name__)
@@ -8,15 +7,15 @@ logger = logging.getLogger(__name__)
 
 class GenresCache:
     def __init__(self):
-        self._genres: List[str] = []
-        self._last_update: Optional[datetime] = None
+        self._genres: list[str] = []
+        self._last_update: datetime | None = None
         self._lock = Lock()
 
-    def get(self) -> List[str]:
+    def get(self) -> list[str]:
         with self._lock:
             return self._genres.copy()
 
-    def update(self, genres: List[str]) -> None:
+    def update(self, genres: list[str]) -> None:
         with self._lock:
             self._genres = genres
             self._last_update = datetime.now()
@@ -31,5 +30,5 @@ class GenresCache:
         return age > max_age_seconds
 
     @property
-    def last_update(self) -> Optional[datetime]:
+    def last_update(self) -> datetime | None:
         return self._last_update

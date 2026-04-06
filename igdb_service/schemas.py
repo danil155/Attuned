@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import Optional
 import logging
 
 from pydantic import BaseModel, Field, field_validator
@@ -12,7 +11,7 @@ class IGDBCompany(BaseModel):
 
 
 class IGDBInvolvedCompany(BaseModel):
-    company: Optional[IGDBCompany] = None
+    company: IGDBCompany | None = None
     developer: bool = False
 
 
@@ -21,11 +20,11 @@ class IGDBNamedEntity(BaseModel):
 
 
 class IGDBCover(BaseModel):
-    url: Optional[str] = None
+    url: str | None = None
 
     @field_validator('url', mode='before')
     @classmethod
-    def fix_cover_url(cls, v: Optional[str]) -> Optional[str]:
+    def fix_cover_url(cls, v: str | None) -> str | None:
         if not v:
             return v
 
@@ -38,13 +37,13 @@ class IGDBCover(BaseModel):
 class IGDBGame(BaseModel):
     id: int
     name: str
-    slug: Optional[str] = None
-    summary: Optional[str] = None
-    storyline: Optional[str] = None
-    url: Optional[str] = None
+    slug: str | None = None
+    summary: str | None = None
+    storyline: str | None = None
+    url: str | None = None
 
-    game_type: Optional[int] = None
-    game_status: Optional[int] = None
+    game_type: int | None = None
+    game_status: int | None = None
 
     genres: list[IGDBNamedEntity] = Field(default_factory=list)
     themes: list[IGDBNamedEntity] = Field(default_factory=list)
@@ -54,16 +53,16 @@ class IGDBGame(BaseModel):
     platforms: list[IGDBNamedEntity] = Field(default_factory=list)
     involved_companies: list[IGDBInvolvedCompany] = Field(default_factory=list)
 
-    cover: Optional[IGDBCover] = None
+    cover: IGDBCover | None = None
 
-    rating: Optional[float] = None
-    rating_count: Optional[int] = None
-    aggregated_rating: Optional[float] = None
-    aggregated_rating_count: Optional[int] = None
-    hypes: Optional[int] = None
+    rating: float | None = None
+    rating_count: int | None = None
+    aggregated_rating: float | None = None
+    aggregated_rating_count: int | None = None
+    hypes: int | None = None
 
-    first_release_date: Optional[int] = None
-    updated_at: Optional[int] = None
+    first_release_date: int | None = None
+    updated_at: int | None = None
 
     @property
     def developers(self) -> list[str]:
@@ -73,7 +72,7 @@ class IGDBGame(BaseModel):
         ]
 
     @property
-    def first_release_datetime(self) -> Optional[datetime]:
+    def first_release_datetime(self) -> datetime | None:
         if self.first_release_date is None:
             return None
 
@@ -88,7 +87,7 @@ class IGDBGame(BaseModel):
             return None
 
     @property
-    def updated_at_datetime(self) -> Optional[datetime]:
+    def updated_at_datetime(self) -> datetime | None:
         if self.updated_at is None:
             return None
 

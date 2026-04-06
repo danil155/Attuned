@@ -1,7 +1,7 @@
 import logging
 import time
 from datetime import datetime, timedelta
-from typing import Generator, Optional
+from typing import Generator
 import requests
 
 from config import IGDBConfig
@@ -16,8 +16,8 @@ class IGDBClient:
     def __init__(self, config: IGDBConfig) -> None:
         self._config = config
         self._session = requests.Session()
-        self._access_token: Optional[str] = None
-        self._token_expires_at: Optional[str] = None
+        self._access_token: str | None = None
+        self._token_expires_at: str | None = None
         self._last_request_at: float = 0.0
         self._genres_cache = GenresCache()
 
