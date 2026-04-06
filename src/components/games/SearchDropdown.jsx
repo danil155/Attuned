@@ -1,6 +1,7 @@
-import {useState, useEffect, useRef, use} from "react";
-import "./SearchDropdown.css";
+import {useState, useEffect, useRef} from "react";
 import { searchGames } from "../../api";
+import "./SearchDropdown.css";
+
 
 export default function SearchDropdown({ excludeIds = [], onSelect, placeholder = "Найди игру…", disabled = false }) {
     const [query, setQuery] = useState("");

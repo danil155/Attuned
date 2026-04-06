@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useApp } from "../../context/AppContext";
 import SearchDropdown from "../../components/games/SearchDropdown";
-import { STARTER_PACKS } from "../../data/mockData";
+import { STARTER_PACKS } from "../../context/AppContext";
 import { getRecommendations, searchGamesByIds } from "../../api";
 import "./Profile.css";
 

@@ -1,10 +1,9 @@
-import {useState, useEffect, use} from "react";
+import {useState, useEffect} from "react";
 import { useNavigate } from "react-router-dom";
 import GameCard from "../../components/games/GameCard";
 import { getRecommendations } from "../../api";
+import { useGenres } from "../../context/AppContext";
 import "./Recommendations.css";
-
-const GENRES = ["Все", "RPG", "Action", "Indie", "Soulslike", "Open World", "Roguelite", "Adventure"];
 
 export default function Recommendations() {
     const navigate = useNavigate();
@@ -15,6 +14,7 @@ export default function Recommendations() {
     const [ratings, setRatings] = useState({});
     const [genreFilter, setGenreFilter] = useState("Все");
     const [sourceIds, setSourceIds] = useState([]);
+    const { genres } = useGenres();
 
     useEffect(() => {
         const stored = sessionStorage.getItem("attuned_recs");
@@ -105,7 +105,7 @@ export default function Recommendations() {
                             </div>
                             <div className="recs-controls__right">
                                 <div className="genre-filter">
-                                    {GENRES.map((g) => (
+                                    {genres.map((g) => (
                                         <button
                                             key={g}
                                             className={`genre-btn ${genreFilter === g ? "genre-btn--active" : ""}`}
