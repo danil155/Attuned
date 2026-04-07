@@ -1,21 +1,24 @@
-import {useEffect, useState} from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import SearchDropdown from "../../components/games/SearchDropdown";
+import { SearchDropdown, PreFilters } from "../../components/games";
+import { DEFAULT_PRE_FILTERS } from "../../components/games/PreFilters";
+import { getRecommendations, searchGames, searchGamesByIds } from "../../api";
 import { STARTER_PACKS } from "../../context/AppContext";
-import {getRecommendations, searchGames, searchGamesByIds} from "../../api";
-import {useApp} from "../../context/AppContext";
 import "./Home.css";
 
 const QUICK_LIMIT = 10;
 
 export default function Home() {
     const navigate = useNavigate();
-    const { setPendingBasketID } = useApp();
 
     const [selected, setSelected] = useState([]);
     const [count, setCount] = useState(8);
+    const [preFilters, setPreFilters] = useState(DEFAULT_PRE_FILTERS);
     const [popularGames, setPopularGames] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [showFilters, setShowFilters] = useState(false);
+
+    const hasActiveFilters = preFilters.platforms.length > 0 || preFilters.releasedOnly !== DEFAULT_PRE_FILTERS.releasedOnly;
 
     // ИЗМЕНИТЬ НА РЕАЛЬНО ПОПУЛЯРНЫЕ ИГРЫ (ТЕ, КОТОРЫЕ ЛАЙКАЮТ ПОЛЬЗОВАТЕЛИ ATTUNED)
     useEffect(() => {
@@ -23,12 +26,15 @@ export default function Home() {
     }, []);
 
     const addGame = (game) => {
-        if (selected.length >= QUICK_LIMIT) return;
-        if (selected.find((g) => g.igdb_id === game.igdb_id)) return;
+        if (selected.length >= QUICK_LIMIT)
+            return;
+        if (selected.find((g) => g.igdb_id === game.igdb_id))
+            return;
         setSelected((prev) => [...prev, game]);
     };
 
-    const removeGame = (id) => setSelected((prev) => prev.filter((g) => g.igdb_id !== id));
+    const removeGame = (igdb_id) =>
+        setSelected((prev) => prev.filter((g) => g.igdb_id !== igdb_id));
 
     const addStarterPack = async (pack) => {
         setLoading(true);
@@ -36,10 +42,9 @@ export default function Home() {
         try {
             const result = await searchGamesByIds(pack.gameIds);
 
-            const packGames = result || []
-
+            const packGames = result?.items ?? result ?? [];
             const existing = new Set(selected.map((g) => g.igdb_id));
-            const toAdd = (packGames?.items || packGames || []).filter((g) => !existing.has(g.igdb_id));
+            const toAdd = packGames.filter((g) => !existing.has(g.igdb_id));
             setSelected((prev) => [...prev, ...toAdd].slice(0, QUICK_LIMIT));
         } catch (error) {
             console.error(error);
@@ -49,7 +54,8 @@ export default function Home() {
     };
 
     const handleGenerate = async () => {
-        if (!selected.length) return;
+        if (!selected.length)
+            return;
 
         setLoading(true);
         try {
@@ -57,7 +63,9 @@ export default function Home() {
 
             const recs = await getRecommendations({
                 liked_igdb_ids: liked_ids,
-                limit: count
+                limit: count,
+                platforms: preFilters.platforms,
+                only_released: preFilters.releasedOnly
             });
 
             sessionStorage.setItem("attuned_recs", JSON.stringify(recs));
@@ -94,14 +102,32 @@ export default function Home() {
                 </p>
 
                 {/* SEARCH */}
-                <div className="home__search">
-                    <SearchDropdown
-                        excludeIds={selected.map((g) => g.igdb_id)}
-                        onSelect={addGame}
-                        placeholder="Начни вводить название игры…"
-                        disabled={selected.length >= QUICK_LIMIT}
-                    />
+                <div className="hero__actions">
+                    <div className="home__search">
+                        <SearchDropdown
+                            excludeIds={selected.map((g) => g.igdb_id)}
+                            onSelect={addGame}
+                            placeholder="Начни вводить название игры…"
+                            disabled={selected.length >= QUICK_LIMIT}
+                        />
+                    </div>
+
+                    <button className={`btn-toggle-filters ${showFilters ? "btn-toggle-filters--active" : ""}`}
+                            onClick={() => setShowFilters(!showFilters)}
+                    >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M4.25 5.61C6.27 8.2 10 13 10 13v6c0 .55.45 1 1 1h2c.55 0 1-.45 1-1v-6s3.72-4.8 5.74-7.39A.998.998 0 0 0 18.95 4H5.04a1 1 0 0 0-.79 1.61z" />
+                        </svg>
+                        Фильтры
+                        {hasActiveFilters && <span className="filters-dot" />}
+                    </button>
                 </div>
+
+                {selected.length > 0 && (
+                    <div className="home__prefilters">
+                        <PreFilters filters={preFilters} onChange={setPreFilters} />
+                    </div>
+                )}
 
                 {/* SELECTED CHIPS */}
                 {selected.length > 0 && (
@@ -112,8 +138,10 @@ export default function Home() {
                         <div className="chips-list">
                             {selected.map((g) => (
                                 <div key={g.igdb_id} className="chip">
-                                    <div className="chip__cover" style={{ backgroundImage: `url(${g.cover_url})` }}>
-                                        <span>{g.name ? g.name[0] : "?"}</span>
+                                    <div className="chip__cover"
+                                         style={{ backgroundImage: g.cover_url ? `url(${g.cover_url})` : "none"}}
+                                    >
+                                        <span>{g.name?.[0] ?? "?"}</span>
                                     </div>
                                     <span className="chip__name">{g.name}</span>
                                     <button className="chip__remove"
@@ -152,11 +180,18 @@ export default function Home() {
                         onClick={handleGenerate}
                         disabled={!selected.length || loading}
                     >
-                        <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z" />
-                        </svg>
                         {loading ? "Загрузка..." : "Найти игры"}
                     </button>
+                </div>
+
+                <div className="hero__actions">
+
+                </div>
+
+                <div className={`filters-wrapper ${showFilters ? "filters-wrapper--open" : ""}`}>
+                    <div className="filters-inner">
+                        <PreFilters filters={preFilters} onChange={setPreFilters} />
+                    </div>
                 </div>
             </section>
 
@@ -192,11 +227,14 @@ export default function Home() {
                                     className="pop-card"
                                     onClick={() => addGame(g)}
                             >
-                                <div className="pop-card__cover" style={{ backgroundImage: `url(${g.cover_url})` }}>
-                                    <span>{g.name ? g.name[0] : "?"}</span>
+                                <div className="pop-card__cover"
+                                     style={{ backgroundImage: g.cover_url ? `url(${g.cover_url})` : "none" }}>
+                                    <span>{g.name?.[0] ?? "?"}</span>
                                 </div>
                                 <span className="pop-card__title">{g.name}</span>
-                                <span className="pop-card__year">{g.first_release_date}</span>
+                                <span className="pop-card__year">
+                                    {g.first_release_date?.slice(0, 4)}
+                                </span>
                             </button>
                         ))}
                     </div>

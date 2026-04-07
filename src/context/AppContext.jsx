@@ -114,7 +114,7 @@ export function AppProvider({ children }) {
             if (b.games.length >= limits.gamesPerBasket)
                 return b;
 
-            if (b.games.find((g) => g.id === game.id))
+            if (b.games.find((g) => g.igdb_id === game.igdb_id))
                 return b;
 
             return { ...b, games: [...b.games, game] };
@@ -123,15 +123,15 @@ export function AppProvider({ children }) {
 
     const removeGameFromBasket = useCallback((basketId, gameId) => {
         setBaskets((prev) => prev.map((b) =>
-            b.id === basketId ? { ...b, games: b.games.filter((g) => g.id !== gameId) } : b
+            b.id === basketId ? { ...b, games: b.games.filter((g) => g.igdb_id !== gameId) } : b
         ));
     }, []);
 
     const fillBasketFromPack = useCallback((basketId, games) => {
         setBaskets((prev) => prev.map((b) => {
             if (b.id !== basketId) return b;
-            const existing = new Set(b.games.map((g) => g.id));
-            const toAdd = games.filter((g) => !existing.has(g.id));
+            const existing = new Set(b.games.map((g) => g.igdb_id));
+            const toAdd = games.filter((g) => !existing.has(g.igdb_id));
             const combined = [...b.games, ...toAdd].slice(0, limits.gamesPerBasket);
             return { ...b, games: combined };
         }));

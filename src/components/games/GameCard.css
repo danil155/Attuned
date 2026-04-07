@@ -6,24 +6,42 @@
     display: flex;
     flex-direction: column;
     position: relative;
-    transition: border-color var(--transition), transform var(--transition), opacity var(--transition);
+    width: 100%;
+    z-index: 1;
+    transition:
+            border-color 240ms cubic-bezier(0.4, 0, 0.2, 1),
+            transform 240ms cubic-bezier(0.4, 0, 0.2, 1),
+            box-shadow 240ms cubic-bezier(0.4, 0, 0.2, 1),
+            z-index 0ms step-end;
     animation: cardIn 380ms cubic-bezier(0.2, 0, 0, 1) both;
 }
 
 @keyframes cardIn {
-    from { opacity: 0; transform: translateY(16px) scale(0.97); }
-    to   { opacity: 1; transform: none; }
+    from { opacity: 0; transform: translateY(20px) scale(0.96); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 .game-card--out {
     opacity: 0;
     transform: scale(0.88);
     pointer-events: none;
+    transition: opacity 320ms ease, transform 320ms ease;
 }
 
 .game-card:hover {
-    border-color: var(--border-md);
-    transform: translateY(-3px);
+    transform: translateY(-6px) scale(1.03);
+    border-color: var(--orange);
+    box-shadow:
+            0 0 0 1px var(--orange),
+            0 0 20px 3px rgba(255, 107, 53, 0.30),
+            0 20px 48px rgba(0, 0, 0, 0.55);
+    z-index: 10;
+    overflow: visible;
+    transition:
+            border-color 240ms cubic-bezier(0.4, 0, 0.2, 1),
+            transform 240ms cubic-bezier(0.4, 0, 0.2, 1),
+            box-shadow 240ms cubic-bezier(0.4, 0, 0.2, 1),
+            z-index 0ms step-start;
 }
 
 /* Match badge */
@@ -31,7 +49,7 @@
     position: absolute;
     top: 10px;
     right: 10px;
-    z-index: 2;
+    z-index: 3;
     display: flex;
     flex-direction: column;
     align-items: flex-end;
@@ -40,6 +58,7 @@
     padding: 5px 9px;
     border-radius: var(--radius-sm);
     border: 1px solid var(--border-md);
+    pointer-events: none;
 }
 
 .match-score {
@@ -58,31 +77,44 @@
 }
 
 /* Cover */
-.game-card__cover {
+.game-card__cover-wrap {
+    position: relative;
+    flex-shrink: 0;
     width: 100%;
     aspect-ratio: 3 / 4;
-    max-height: 220px;
+    overflow: hidden;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+
+.game-card__cover {
+    width: 100%;
+    height: 100%;
     background-size: cover;
     background-position: center;
     background-color: var(--surface);
     display: flex;
     align-items: center;
     justify-content: center;
-    position: relative;
+    transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.game-card__cover-fallback {
+.game-card:hover .game-card__cover {
+    transform: scale(1.04);
+}
+
+.game-card__fallback {
     font-family: "Bebas Neue", sans-serif;
-    font-size: 48px;
+    font-size: 72px;
     color: var(--text-3);
-    opacity: 0.4;
+    opacity: 0.3;
 }
 
-.game-card__rating-badge {
+.game-card__rating {
     position: absolute;
     bottom: 8px;
     left: 10px;
-    background: var(--bg);
+    background: rgba(12, 12, 11, 0.88);
+    backdrop-filter: blur(6px);
     border: 1px solid var(--border-md);
     border-radius: var(--radius-sm);
     padding: 2px 7px;
@@ -138,11 +170,194 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 8px;
     margin-top: auto;
     padding-top: 10px;
     border-top: 1px solid var(--border);
 }
 
+/* Basket Menu*/
+.basket-wrap {
+    position: relative;
+    min-width: 110px;
+}
+
+@keyframes checkmark {
+    0% {
+        transform: scale(0);
+        opacity: 0;
+    }
+    50% {
+        transform: scale(1.2);
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.btn-basket {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 10px;
+    background: var(--surface);
+    border: 1px solid var(--border-md);
+    border-radius: var(--radius-sm);
+    color: var(--text-2);
+    font-family: "Outfit", sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    width: 100%;
+    transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-basket--hidden {
+    animation: buttonFadeOut 200ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    pointer-events: none;
+}
+
+@keyframes buttonFadeOut {
+    0% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    100% {
+        opacity: 0;
+        transform: scale(0.9);
+        visibility: hidden;
+    }
+}
+
+.btn-basket--open {
+    border-color: var(--orange);
+    color: var(--orange);
+    background: var(--orange-dim);
+    transform: scale(0.98);
+}
+
+.btn-basket:hover,
+.btn-basket--open {
+    border-color: var(--orange);
+    color: var(--orange);
+    background: var(--orange-dim);
+}
+
+.basket-menu {
+    position: absolute;
+    top: 0;
+    left: 0;
+    min-width: 210px;
+    background: var(--card);
+    border: 1px solid var(--border-md);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    z-index: 200;
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.55);
+    animation: menuSlideIn 250ms cubic-bezier(0.2, 0, 0, 1) forwards;
+    transform-origin: top left;
+}
+
+@keyframes menuSlideIn {
+    0% {
+        opacity: 0;
+        transform: scaleY(0.95);
+    }
+    100% {
+        opacity: 1;
+        transform: scaleY(1);
+    }
+}
+
+.basket-menu--hidden {
+    animation: menuFadeOut 200ms ease forwards;
+}
+
+@keyframes menuFadeOut {
+    0% {
+        opacity: 1;
+        transform: scaleY(1) translateY(0);
+    }
+    100% {
+        opacity: 0;
+        transform: scaleY(0.8) translateY(-10px);
+        visibility: hidden;
+    }
+}
+
+.basket-menu__item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 9px 12px;
+    background: none;
+    border: none;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    font-family: "Outfit", sans-serif;
+    font-size: 13px;
+    cursor: pointer;
+    text-align: left;
+    transition: all 150ms ease;
+}
+
+.basket-menu__item:last-child {
+    border-bottom: none;
+}
+
+.basket-menu__item:not(:disabled):hover {
+    background: var(--orange-dim);
+    color: var(--orange);
+    transform: translateX(4px);
+}
+
+.basket-menu__item--in {
+    color: var(--text-3);
+    cursor: default;
+}
+
+.basket-menu__item--full {
+    color: var(--text-3);
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+.basket-menu__item--added {
+    background: var(--orange-dim);
+    color: var(--orange);
+    animation: addedSuccess 500ms ease;
+}
+
+@keyframes addedSuccess {
+    0% {
+        background: transparent;
+    }
+    30% {
+        background: rgba(255, 107, 53, 0.3);
+    }
+    100% {
+        background: transparent;
+    }
+}
+
+.basket-menu__item svg {
+    transition: transform 200ms ease;
+}
+
+.basket-menu__item:active svg {
+    transform: scale(1.2);
+}
+
+.basket-menu__cnt {
+    margin-left: auto;
+    font-size: 11px;
+    color: var(--text-3);
+}
+
+/* Like / Dislike*/
 .game-card__actions {
     display: flex;
     gap: 5px;
@@ -159,18 +374,93 @@
     border-radius: 50%;
     cursor: pointer;
     color: var(--text-3);
-    transition: all var(--transition);
+    transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
 }
 
-.action-btn--like:hover,
+.action-btn::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 107, 107, 0.3);
+    transform: translate(-50%, -50%);
+    transition: width 300ms, height 300ms;
+}
+
+.action-btn:active::before {
+    width: 100%;
+    height: 100%;
+}
+
+.action-btn--animate {
+    animation: btnPulse 0.3s ease-out;
+}
+
+@keyframes btnPulse {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.15);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+.action-btn--liked {
+    animation: heartBeat 0.4s ease-out;
+}
+
+@keyframes heartBeat {
+    0% {
+        transform: scale(1);
+    }
+    30% {
+        transform: scale(1.3);
+    }
+    60% {
+        transform: scale(1.1);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+.action-btn:hover,
 .action-btn--liked {
     color: #ff6b6b;
     border-color: rgba(255, 107, 107, 0.4);
     background: rgba(255, 107, 107, 0.1);
 }
 
+.action-btn--skip:active {
+    transform: rotate(90deg);
+    transition: transform 200ms ease;
+}
+
 .action-btn--skip:hover {
     color: var(--text);
     border-color: var(--border-md);
     background: rgba(255, 255, 255, 0.05);
+}
+
+.game-card--out {
+    animation: slideOut 320ms ease forwards;
+}
+
+@keyframes slideOut {
+    0% {
+        opacity: 1;
+        transform: translateX(0) scale(1);
+    }
+    100% {
+        opacity: 0;
+        transform: translateX(-30px) scale(0.88);
+    }
 }

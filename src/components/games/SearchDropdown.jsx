@@ -3,7 +3,7 @@ import { searchGames } from "../../api";
 import "./SearchDropdown.css";
 
 
-export default function SearchDropdown({ excludeIds = [], onSelect, placeholder = "Найди игру…", disabled = false }) {
+export function SearchDropdown({ excludeIds = [], onSelect, placeholder = "Найди игру…", disabled = false }) {
     const [query, setQuery] = useState("");
     const [open, setOpen] = useState(false);
     const [results, setResults] = useState([]);
@@ -89,7 +89,9 @@ export default function SearchDropdown({ excludeIds = [], onSelect, placeholder 
                                 </div>
                                 <div className="sd-info">
                                     <span className="sd-title">{g.name}</span>
-                                    <span className="sd-meta">{g.genres.join(" · ")} · {g.first_release_date}</span>
+                                    <span className="sd-meta">
+                                        {g.genres.join(" · ")} · {g.first_release_date?.slice(0, 4)}
+                                    </span>
                                 </div>
                                 <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" className="sd-arrow">
                                     <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z" />

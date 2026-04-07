@@ -33,6 +33,25 @@
     margin-bottom: 1.5rem;
 }
 
+.filters-wrapper {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 0.3s ease-out, opacity 0.2s, margin-top 0.3s;
+    overflow: hidden;
+    opacity: 0;
+    margin-top: 0;
+}
+
+.filters-wrapper--open {
+    grid-template-rows: 1fr;
+    opacity: 1;
+    margin-top: 1.5rem;
+}
+
+.filters-inner {
+    min-height: 0;
+}
+
 .pulse-dot {
     width: 6px;
     height: 6px;
@@ -47,8 +66,8 @@
 }
 
 .hero__title {
-    font-family: "Bebas Neue", sans-serif;
-    font-size: clamp(54px, 8vw, 108px);
+    font-family: "DrukWideCyr-Bold", sans-serif;
+    font-size: clamp(54px, 8vw, 90px);
     line-height: 0.92;
     letter-spacing: 0.04em;
     color: var(--text);
@@ -66,8 +85,9 @@
 }
 
 .home__search {
-    max-width: 640px;
+    max-width: none;
     margin-bottom: 1.5rem;
+    width: 100%;
 }
 
 /* ── Chips ── */
@@ -249,24 +269,30 @@
 
 .packs-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 12px;
-    margin-bottom: 4rem;
+    grid-template-columns: repeat(auto-fill, 180px);
+    gap: 16px;
+    justify-content: center;
+    margin-top: 24px;
 }
 
 .pack-card {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 6px;
-    padding: 18px 20px;
+    box-sizing: border-box;
+    cursor: pointer;
+
+    width: 180px;
+    height: 200px;
     background: var(--card);
     border: 1px solid var(--border);
     border-radius: var(--radius-lg);
-    cursor: pointer;
-    text-align: left;
-    font-family: "Outfit", sans-serif;
-    transition: border-color var(--transition), background var(--transition), transform var(--transition);
+
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    text-align: center;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .pack-card:hover {
@@ -276,15 +302,16 @@
 }
 
 .pack-card__emoji {
-    font-size: 28px;
+    font-size: 24px;
     line-height: 1;
-    margin-bottom: 2px;
+    margin-bottom: 8px;
 }
 
 .pack-card__name {
     font-size: 15px;
     font-weight: 600;
     color: var(--text);
+    margin-bottom: 8px;
 }
 
 .pack-card__desc {
@@ -298,6 +325,51 @@
     color: var(--orange);
     font-weight: 600;
     margin-top: 4px;
+}
+
+.hero__actions {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    margin: 2rem auto 0;
+}
+
+.hero__actions .search-dropdown {
+    flex: 1;
+}
+
+.btn-toggle-filters {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    height: 48px;
+    padding: 0 20px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    color: var(--text-2);
+    font-family: inherit;
+    cursor: pointer;
+    white-space: nowrap;
+    position: relative;
+    transition: all 0.2s;
+}
+
+.btn-toggle-filters--active {
+    background: var(--orange-dim);
+    border-color: var(--orange);
+    color: var(--orange);
+}
+
+.filters-dot {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 6px;
+    height: 6px;
+    background: var(--orange);
+    border-radius: 50%;
+    box-shadow: 0 0 8px var(--orange);
 }
 
 /* ── Popular ── */

@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useApp } from "../../context/AppContext";
-import SearchDropdown from "../../components/games/SearchDropdown";
-import { STARTER_PACKS } from "../../context/AppContext";
+import { useApp, STARTER_PACKS } from "../../context/AppContext";
+import { SearchDropdown, PreFilters } from "../../components/games";
+import { DEFAULT_PRE_FILTERS } from "../../components/games/PreFilters";
 import { getRecommendations, searchGamesByIds } from "../../api";
 import "./Profile.css";
 
@@ -21,8 +21,11 @@ export default function Profile() {
     const [editingId, setEditingId] = useState(null);
     const [editName, setEditName] = useState("");
     const [loading, setLoading] = useState(false);
+    const [preFilters, setPreFilters] = useState(DEFAULT_PRE_FILTERS);
+    const [showFilters, setShowFilters] = useState(false);
 
     const activeBasket = getBasket(activeBasketId);
+    const hasActiveFilters = preFilters.platforms.length > 0 || preFilters.releasedOnly !== DEFAULT_PRE_FILTERS.releasedOnly;
 
     const handleAddBasket = () => {
         const name = newBasketName.trim() || `Коллекция ${baskets.length + 1}`;
@@ -42,17 +45,22 @@ export default function Profile() {
     };
 
     const handleGenerate = async (basket) => {
-        if (!basket.games.length) return;
+        if (!basket.games.length)
+            return;
 
         setLoading(true);
         try {
+            const liked_ids = basket.games.map((g) => g.igdb_ids);
             const recs = await getRecommendations({
-                liked_igdb_ids: basket.games.map(g => g.id),
-                limit: 8
+                liked_igdb_ids: liked_ids,
+                limit: 10,
+                platforms: preFilters.platforms,
+                only_released: preFilters.releasedOnly
             });
 
             sessionStorage.setItem("attuned_recs", JSON.stringify(recs));
             sessionStorage.setItem("attuned_source", JSON.stringify(basket.games.map((g) => g.title)));
+            sessionStorage.setItem("attuned_source_ids", JSON.stringify(liked_ids));
             navigate("/recommendations");
         } catch (error) {
             console.error(error);
@@ -87,23 +95,36 @@ export default function Profile() {
                                         value={editName}
                                         onChange={(e) => setEditName(e.target.value)}
                                         onBlur={saveEdit}
-                                        onKeyDown={(e) => { if (e.key === "Enter") saveEdit(); if (e.key === "Escape") setEditingId(null); }}
+                                        onKeyDown={(e) => {
+                                            if (e.key === "Enter")
+                                                saveEdit();
+                                            if (e.key === "Escape")
+                                                setEditingId(null);
+                                        }}
                                         onClick={(e) => e.stopPropagation()}
                                         autoFocus
                                     />
                                 ) : (
                                     <span className="basket-tab__name">{b.name}</span>
                                 )}
-                                <span className="basket-tab__count">{b.games.length} / {limits.gamesPerBasket}</span>
+                                <span className="basket-tab__count">
+                                    {b.games.length} / {limits.gamesPerBasket}
+                                </span>
                             </div>
                             <div className="basket-tab__actions" onClick={(e) => e.stopPropagation()}>
-                                <button className="icon-btn" onClick={() => startEdit(b)} title="Переименовать">
+                                <button className="icon-btn"
+                                        onClick={() => startEdit(b)}
+                                        title="Переименовать"
+                                >
                                     <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
                                         <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" />
                                     </svg>
                                 </button>
                                 {baskets.length > 1 && (
-                                    <button className="icon-btn icon-btn--danger" onClick={() => removeBasket(b.id)} title="Удалить">
+                                    <button className="icon-btn icon-btn--danger"
+                                            onClick={() => removeBasket(b.id)}
+                                            title="Удалить"
+                                    >
                                         <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
                                             <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
                                         </svg>
@@ -123,12 +144,25 @@ export default function Profile() {
                                 placeholder="Название коллекции…"
                                 value={newBasketName}
                                 onChange={(e) => setNewBasketName(e.target.value)}
-                                onKeyDown={(e) => { if (e.key === "Enter") handleAddBasket(); if (e.key === "Escape") setAddingBasket(false); }}
+                                onKeyDown={(e) => {
+                                    if (e.key === "Enter")
+                                        handleAddBasket();
+                                    if (e.key === "Escape")
+                                        setAddingBasket(false);
+                                }}
                                 autoFocus
                             />
                             <div className="new-basket-actions">
-                                <button className="btn-sm btn-sm--primary" onClick={handleAddBasket}>Создать</button>
-                                <button className="btn-sm" onClick={() => setAddingBasket(false)}>Отмена</button>
+                                <button className="btn-sm btn-sm--primary"
+                                        onClick={handleAddBasket}
+                                >
+                                    Создать
+                                </button>
+                                <button className="btn-sm"
+                                        onClick={() => setAddingBasket(false)}
+                                >
+                                    Отмена
+                                </button>
                             </div>
                         </div>
                     ) : (
@@ -142,7 +176,11 @@ export default function Profile() {
                 ) : (
                     <div className="limit-notice">
                         <p>Достигнут лимит коллекций.</p>
-                        {!isPro && <p className="limit-notice__pro">Получи <strong>Pro</strong> — до 5 коллекций.</p>}
+                        {!isPro && (
+                            <p className="limit-notice__pro">
+                                Получи <strong>Pro</strong> — до 5 коллекций.
+                            </p>
+                        )}
                     </div>
                 )}
             </div>
@@ -158,24 +196,51 @@ export default function Profile() {
                                     {activeBasket.games.length} игр · лимит {limits.gamesPerBasket}
                                 </p>
                             </div>
-                            <button
-                                className={`btn-generate-basket ${!activeBasket.games.length ? "btn-generate-basket--disabled" : ""}`}
-                                onClick={() => handleGenerate(activeBasket)}
-                                disabled={!activeBasket.games.length}
-                            >
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z" />
-                                </svg>
-                                Подобрать по коллекции
-                            </button>
+                            <div className="basket-header__actions">
+                                {activeBasket.games.length > 0 && (
+                                    <button className={`btn-toggle-filters ${showFilters ? "btn-toggle-filters--active" : ""}`}
+                                            onClick={() => setShowFilters((v) => !v)}
+                                    >
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                                            <path d="M4.25 5.61C6.27 8.2 10 13 10 13v6c0 .55.45 1 1 1h2c.55 0 1-.45 1-1v-6s3.72-4.8 5.74-7.39A.998.998 0 0 0 18.95 4H5.04a1 1 0 0 0-.79 1.61z" />
+                                        </svg>
+                                        Фильтры
+                                        {hasActiveFilters && (
+                                            <span className="filters-dot" />
+                                        )}
+                                    </button>
+                                )}
+
+                                <button
+                                    className={`btn-generate-basket ${(!activeBasket.games.length || loading) ? "btn-generate-basket--disabled" : ""}`}
+                                    onClick={() => handleGenerate(activeBasket)}
+                                    disabled={!activeBasket.games.length || loading}
+                                >
+                                    {loading
+                                        ? <span className="btn-spinner-small" />
+                                        : (
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z" />
+                                            </svg>
+                                        )
+                                    }
+                                    {loading ? "Загрузка..." : "Подобрать по коллекции"}
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className={`basket-prefilters-wrapper ${showFilters && activeBasket.games.length > 0 ? "basket-prefilters-wrapper--open" : ""}`}>
+                            <div className="basket-prefilters">
+                                <PreFilters filters={preFilters} onChange={setPreFilters} />
+                            </div>
                         </div>
 
                         {/* SEARCH */}
                         <div className="basket-search">
                             <SearchDropdown
-                                excludeIds={activeBasket.games.map((g) => g.id)}
+                                excludeIds={activeBasket.games.map((g) => g.igdb_id)}
                                 onSelect={(game) => addGameToBasket(activeBasket.id, game)}
-                                placeholder="Добавь игру в коллекцию…"
+                                placeholder="Добавь игру в коллекцию..."
                                 disabled={activeBasket.games.length >= limits.gamesPerBasket}
                             />
                         </div>
@@ -185,12 +250,17 @@ export default function Profile() {
                             <div className="basket-games">
                                 {activeBasket.games.map((g) => (
                                     <div key={g.igdb_id} className="basket-row">
-                                        <div className="basket-row__cover" style={{ backgroundImage: `url(${g.cover_url})` }}>
-                                            <span>{g.name ? g.name[0] : "?"}</span>
+                                        <div className="basket-row__cover"
+                                             style={{ backgroundImage: g.cover_url ? `url(${g.cover_url})` : "none" }}
+                                        >
+                                            <span>{g.name?.[0] ?? "?"}</span>
                                         </div>
                                         <div className="basket-row__info">
                                             <span className="basket-row__title">{g.name}</span>
-                                            <span className="basket-row__meta">{g.genres ? g.genres.join(" · ") : ""} · {g.first_release_date}</span>
+                                            <span className="basket-row__meta">
+                                                {g.genres?.join(" · ")}
+                                                {g.first_release_date ? ` · ${g.first_release_date.slice(0, 4)}` : ""}
+                                            </span>
                                         </div>
                                         <button
                                             className="icon-btn icon-btn--danger"
@@ -221,9 +291,8 @@ export default function Profile() {
                                                 setLoading(true);
                                                 try {
                                                     const result = await searchGamesByIds(pack.gameIds);
-                                                    if (result) {
-                                                        fillBasketFromPack(activeBasket.id, result);
-                                                    }
+                                                    const games = result?.items ?? result ?? [];
+                                                    fillBasketFromPack(activeBasket.id, games);
                                                 } catch (err) {
                                                     console.error(err);
                                                 } finally {

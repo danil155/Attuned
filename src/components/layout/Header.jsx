@@ -15,10 +15,7 @@ export default function Header() {
                 </NavLink>
 
                 <nav className="header__nav">
-                    <NavLink to="/"            className={({ isActive }) => `nav-link ${isActive ? "nav-link--active" : ""}`} end>
-                        Подбор
-                    </NavLink>
-                    <NavLink to="/profile"     className={({ isActive }) => `nav-link ${isActive ? "nav-link--active" : ""}`}>
+                    <NavLink to="/profile" className={({ isActive }) => `nav-link ${isActive ? "nav-link--active" : ""}`}>
                         Коллекции
                     </NavLink>
                     <NavLink to="/recommendations" className={({ isActive }) => `nav-link ${isActive ? "nav-link--active" : ""}`}>

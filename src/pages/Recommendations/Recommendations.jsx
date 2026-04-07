@@ -1,20 +1,27 @@
-import {useState, useEffect} from "react";
+import {useState, useEffect, useMemo} from "react";
 import { useNavigate } from "react-router-dom";
-import GameCard from "../../components/games/GameCard";
+import { GameCard, RecsFilters } from "../../components/games";
+import { DEFAULT_FILTERS } from "../../components/games/RecsFilters";
 import { getRecommendations } from "../../api";
 import { useGenres } from "../../context/AppContext";
 import "./Recommendations.css";
 
+const TODAY = new Date().toISOString().slice(0, 10);
+
 export default function Recommendations() {
     const navigate = useNavigate();
+    const { genres } = useGenres();
 
     const [recs, setRecs] = useState([]);
     const [source, setSource] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [ratings, setRatings] = useState({});
-    const [genreFilter, setGenreFilter] = useState("Все");
     const [sourceIds, setSourceIds] = useState([]);
-    const { genres } = useGenres();
+    const [loading, setLoading] = useState(true);
+    const [filters, setFilters] = useState(DEFAULT_FILTERS);
+
+    const allPlatforms = useMemo(
+        () => [...new Set(recs.flatMap((r) => r.platform ?? []))].sort(),
+        [recs]
+    );
 
     useEffect(() => {
         const stored = sessionStorage.getItem("attuned_recs");
@@ -26,41 +33,53 @@ export default function Recommendations() {
             return;
         }
 
+        if (storedSource)
+            setSource(JSON.parse(storedSource));
+        if (storedSourceIds)
+            setSourceIds(JSON.parse(storedSourceIds));
+
         setTimeout(() => {
-            setRecs(JSON.parse(stored));
-            if (storedSource) setSource(JSON.parse(storedSource));
-            if (storedSourceIds) setSourceIds(JSON.parse(storedSourceIds));
+            const data = JSON.parse(stored);
+            setRecs(data?.items ?? data ?? []);
             setLoading(false);
         }, 1800);
     }, [navigate]);
 
-    const handleDislike = (id) => {
-        setRecs((prev) => prev.filter((r) => r.igdb_id !== id));
-    };
-
-    const handleRate = (id, val) => {
-        setRatings((prev) => ({ ...prev, [id]: val }));
+    const handleDislike = (igdb_id) => {
+        setRecs((prev) => prev.filter((r) => r.igdb_id !== igdb_id));
     };
 
     const addMore = async () => {
         try {
             const extra = await getRecommendations({
                 liked_igdb_ids: sourceIds,
-                seen_igdb_ids: (recs?.items || recs || []).map(r => r.igdb_id),
+                seen_igdb_ids: recs.map((r) => r.igdb_id),
                 limit: 4,
             });
 
-            if (extra && extra.length > 0) {
-                setRecs((prev) => [...prev, ...extra]);
+            const items = extra?.items ?? extra ?? [];
+
+            if (items.length > 0) {
+                setRecs((prev) => [...prev, ...items]);
             }
         } catch (error) {
             console.error("Error when uploading recommendations:", error);
         }
     };
 
-    const filtered = genreFilter === "Все"
-        ? recs
-        : (recs?.items || recs || []).filter((r) => r.genres && r.genres.includes(genreFilter));
+    const filtered = useMemo(() => {
+        return recs.filter((r) => {
+            if (filters.releasedOnly && r.first_release_date && r.first_release_date > TODAY)
+                return false;
+            if (filters.minRating > 0 && (r.rating == null || r.rating < filters.minRating))
+                return false;
+            if (filters.genres.length > 0 && !r.genres?.some((g) => filters.genres.includes(g)))
+                return false;
+            if (filters.platforms.length > 0 && !r.platforms?.some((p) => filters.platforms.includes(p)))
+                return false;
+            return true;
+        });
+    }, [recs, filters]);
 
     return (
         <div className="recs-page">
@@ -68,7 +87,9 @@ export default function Recommendations() {
 
                 {/* HEADER */}
                 <div className="recs-header">
-                    <button className="back-btn" onClick={() => navigate(-1)}>
+                    <button className="back-btn"
+                            onClick={() => navigate(-1)}
+                    >
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
                             <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z" />
                         </svg>
@@ -77,7 +98,11 @@ export default function Recommendations() {
 
                     {source.length > 0 && (
                         <p className="recs-source">
-                            На основе: <span>{source.slice(0, 3).join(", ")}{source.length > 3 ? ` и ещё ${source.length - 3}` : ""}</span>
+                            На основе: {" "}
+                            <span>
+                                {source.slice(0, 3).join(", ")}
+                                {source.length > 3 ? ` и ещё ${source.length - 3}` : ""}
+                            </span>
                         </p>
                     )}
                 </div>
@@ -86,7 +111,7 @@ export default function Recommendations() {
                     <>
                         <div className="recs-loading">
                             <div className="recs-loading__spinner" />
-                            <p className="recs-loading__text">Подбираем игры…</p>
+                            <p className="recs-loading__text">Подбираем игры...</p>
                             <p className="recs-loading__sub">Анализируем твои предпочтения</p>
                         </div>
                         <div className="skeleton-grid">
@@ -98,24 +123,20 @@ export default function Recommendations() {
                 ) : (
                     <>
                         <div className="recs-controls">
-                            <div>
-                                <h1 className="recs-title">
-                                    {filtered.length} <span>рекомендаций</span>
-                                </h1>
-                            </div>
+                            <h1 className="recs-title">
+                                {filtered.length} <span>рекомендаций</span>
+                            </h1>
                             <div className="recs-controls__right">
-                                <div className="genre-filter">
-                                    {genres.map((g) => (
-                                        <button
-                                            key={g}
-                                            className={`genre-btn ${genreFilter === g ? "genre-btn--active" : ""}`}
-                                            onClick={() => setGenreFilter(g)}
-                                        >
-                                            {g}
-                                        </button>
-                                    ))}
-                                </div>
-                                <button className="btn-more" onClick={addMore}>
+                                <RecsFilters
+                                    genres={genres}
+                                    platforms={allPlatforms}
+                                    filters={filters}
+                                    onChange={setFilters}
+                                />
+
+                                <button className="btn-more"
+                                        onClick={addMore}
+                                >
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
                                         <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" />
                                     </svg>
@@ -126,17 +147,19 @@ export default function Recommendations() {
 
                         {filtered.length === 0 ? (
                             <div className="recs-empty">
-                                <p>По жанру «{genreFilter}» ничего нет.</p>
-                                <button className="btn-reset" onClick={() => setGenreFilter("Все")}>Показать все</button>
+                                <p>По выбранным фильтрам ничего не найдено</p>
+                                <button className="btn-reset"
+                                        onClick={() => setFilters(DEFAULT_FILTERS)}
+                                >
+                                    Сбросить фильтры
+                                </button>
                             </div>
                         ) : (
                             <div className="recs-grid">
-                                {(filtered?.items || filtered || []).map((r, i) => (
+                                {filtered.map((r) => (
                                     <GameCard
                                         key={r.igdb_id}
                                         game={r}
-                                        rating={ratings[r.igdb_id] || 0}
-                                        onRate={handleRate}
                                         onDislike={handleDislike}
                                     />
                                 ))}
