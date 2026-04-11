@@ -9,9 +9,10 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from config import load_db_config, load_igdb_config
 from config_vars import MainParameters
-from api import games, recommendations, genres
+from api import games, recommendations, genres, auth, interactions
 from db_service.connection import Database
 from db_service.migrations import run_migrations
+from payment_db.connection import PaymentDatabase
 from igdb_service.client import IGDBClient
 from sync_service.syncer import SyncService
 from embedding_service.embedder import EmbeddingService
@@ -37,9 +38,13 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     setup_logging()
     logger.info('Starting Attuned backend')
 
-    db = Database(load_db_config())
+    db_config = load_db_config()
+    db = Database(db_config)
     await run_migrations(db.engine)
-    logger.info('Database ready')
+    logger.info('Main Database ready')
+
+    payment_db = PaymentDatabase(db_config)
+    logger.info('Payment Database ready')
 
     igdb_client = IGDBClient(load_igdb_config())
 
@@ -50,6 +55,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     app.state.igdb_client = igdb_client
     app.state.db = db
     app.state.recommendation_service = recommendation_service
+    app.state.payment_db = payment_db
 
     await _run_sync(sync_service)
     await _run_embedding(embedding_service)
@@ -77,9 +83,9 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         misfire_grace_time=300
     )
     scheduler.start()
-    logger.info(f'Scheduler started: nightly sync at'
+    logger.info(f'Scheduler started: nightly sync at '
                 f'{MainParameters.SYNC_HOUR:02d}:{MainParameters.SYNC_MINUTE:02d} Moscow')
-    logger.info(f'Scheduler started: refresh genres at'
+    logger.info(f'Scheduler started: refresh genres at '
                 f'{MainParameters.GENRES_REFRESH_HOUR:02d}:{MainParameters.GENRES_REFRESH_MINUTE:02d} Moscow')
 
     yield
@@ -87,6 +93,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     logger.info('Shutting down')
     scheduler.shutdown(wait=False)
     await db.close()
+    await payment_db.close()
     logger.info('Shutdown complete')
 
 
@@ -133,6 +140,8 @@ def create_app() -> FastAPI:
     app.include_router(recommendations.router, prefix='/api')
     app.include_router(games.router, prefix='/api')
     app.include_router(genres.router, prefix='/api')
+    app.include_router(auth.router, prefix='/api')
+    app.include_router(interactions.router, prefix='/ws')
 
     return app
 

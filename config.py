@@ -24,6 +24,12 @@ class DBConfig:
     user: str
     password: str
 
+    mysql_host: str
+    mysql_port: str
+    mysql_name: str
+    mysql_user: str
+    mysql_password: str
+
     app_pool_size: int = 10
     app_max_overflow: int = 20
     app_pool_timeout: float = 5.0
@@ -33,9 +39,18 @@ class DBConfig:
 
     pool_recycle: int = 1800
 
+    mysql_pool_size: int = 5
+    mysql_max_overflow: int = 10
+    mysql_pool_recycle: int = 3600
+
     @property
     def dsn(self) -> str:
         return f'postgresql+asyncpg://{self.user}:{self.password}@{self.host}:{self.port}/{self.name}'
+
+    @property
+    def mysql_dsn(self) -> str:
+        return f'mysql+aiomysql://{self.mysql_user}:{self.mysql_password}@{self.mysql_host}:{self.mysql_port}' \
+               f'/{self.mysql_name}?charset=utf8mb4'
 
 
 def load_igdb_config() -> IGDBConfig:
@@ -51,7 +66,12 @@ def load_db_config() -> DBConfig:
         port=_require_env('DB_PORT'),
         name=_require_env('DB_NAME'),
         user=_require_env('DB_USER'),
-        password=_require_env('DB_PASSWORD')
+        password=_require_env('DB_PASSWORD'),
+        mysql_host=_require_env('MYSQL_DB_HOST'),
+        mysql_port=_require_env('MYSQL_DB_PORT'),
+        mysql_name=_require_env('MYSQL_DB_NAME'),
+        mysql_user=_require_env('MYSQL_DB_USER'),
+        mysql_password=_require_env('MYSQL_DB_PASSWORD')
     )
 
 

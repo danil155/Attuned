@@ -1,4 +1,5 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass
+from typing import ClassVar
 
 
 @dataclass(frozen=True)
@@ -49,13 +50,13 @@ class RecommendationParameters:
 
     CANDIDATE_MULTIPLIER: int = 10
 
-    TAG_WEIGHTS: dict[str, float] = field(default_factory=lambda: {
+    TAG_WEIGHTS: ClassVar[dict[str, float]] = {
         'keywords': 0.4,
         'themes': 0.3,
         'genres': 0.15,
         'game_modes': 0.1,
         'developers': 0.05
-    })
+    }
 
     MAX_TOTAL: int = 30
     DEFAULT_LIMIT: int = 10
@@ -67,3 +68,9 @@ class MainParameters:
     SYNC_MINUTE: int = 0
     GENRES_REFRESH_HOUR: int = 14
     GENRES_REFRESH_MINUTE: int = 0
+
+
+@dataclass(frozen=True)
+class CrudParameters:
+    EMOJI_LIST: ClassVar[list[str]] = ['😁', '😋', '😳', '😱', '🥰', '🤓', '😎', '🥵', '😴', '🤡', '😈', '😌', '🤠',
+                                       '😨', '🤭']

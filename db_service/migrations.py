@@ -3,6 +3,7 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncEngine
 
 from db_service.models import Base
+from db_service.models import Base as UserBase
 
 logger = logging.getLogger(__name__)
 
@@ -22,6 +23,18 @@ CREATE INDEX IF NOT EXISTS idx_games_embedding
 ON GAMES USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100)
 """
 
+_USER_INDEXES = [
+    'CREATE INDEX IF NOT EXISTS idx_user_external ON user_data(external_id)',
+    'CREATE INDEX IF NOT EXISTS idx_user_token ON user_data(access_token)',
+    'CREATE INDEX IF NOT EXISTS idx_user_pro_expires ON user_data(pro_expires_at) WHERE is_pro = true',
+    'CREATE INDEX IF NOT EXISTS idx_user_carts_user ON user_carts(user_id)',
+    'CREATE INDEX IF NOT EXISTS idx_user_carts_games ON user_carts USING GIN (games)',
+    'CREATE INDEX IF NOT EXISTS idx_user_interactions_user ON user_game_interactions(user_id)',
+    'CREATE INDEX IF NOT EXISTS idx_user_interactions_igdb ON user_game_interactions(igdb_id)',
+    'CREATE INDEX IF NOT EXISTS idx_user_interactions_type ON user_game_interactions(interaction_type)',
+    'CREATE INDEX IF NOT EXISTS idx_user_interactions_composite ON user_game_interactions(user_id, igdb_id, interaction_type)',
+]
+
 
 async def run_migrations(engine: AsyncEngine) -> None:
     logger.info('Running DB migrations')
@@ -31,8 +44,9 @@ async def run_migrations(engine: AsyncEngine) -> None:
         await conn.execute(text('CREATE EXTENSION IF NOT EXISTS vector'))
 
         await conn.run_sync(Base.metadata.create_all)
+        await conn.run_sync(UserBase.metadata.create_all)
 
-        for stmt in _GIN_INDEXES:
+        for stmt in _GIN_INDEXES + _USER_INDEXES:
             await conn.execute(text(stmt))
 
         await conn.execute(text(_VECTOR_INDEX))
