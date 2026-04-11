@@ -1,6 +1,5 @@
 from datetime import datetime
 import logging
-
 from pydantic import BaseModel, Field, field_validator
 
 logger = logging.getLogger(__name__)

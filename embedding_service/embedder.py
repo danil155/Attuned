@@ -5,7 +5,7 @@ from sentence_transformers import SentenceTransformer
 
 from db_service.connection import Database
 from db_service.crud import EmbeddingCrud
-from config_vars import EmbeddingParameters
+from config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -17,8 +17,8 @@ class EmbeddingService:
 
     def _load_model(self) -> SentenceTransformer:
         if self._model is None:
-            logger.info(f'Loading model: {EmbeddingParameters.MODEL_NAME}')
-            self._model = SentenceTransformer(EmbeddingParameters.MODEL_NAME)
+            logger.info(f'Loading model: {settings.MODEL_NAME}')
+            self._model = SentenceTransformer(settings.MODEL_NAME)
             logger.info('Model loaded')
 
         return self._model
@@ -37,7 +37,7 @@ class EmbeddingService:
         processed = 0
         while True:
             async with self._db.background_session() as session:
-                rows = await EmbeddingCrud(session).get_games_without_embeddings(batch_size=EmbeddingParameters.DB_BATH_SIZE)
+                rows = await EmbeddingCrud(session).get_games_without_embeddings(batch_size=settings.DB_BATH_SIZE)
 
             if not rows:
                 break
@@ -84,7 +84,7 @@ def _build_tags_text(row) -> str:
         parts.append(themes_str)
 
     if row.keywords:
-        top_keywords = row.keywords[:EmbeddingParameters.MAX_KEYWORDS]
+        top_keywords = row.keywords[:settings.MAX_KEYWORDS]
         parts.append(' '.join(top_keywords))
 
     return ' '.join(parts) if parts else row.name
@@ -95,14 +95,14 @@ def _encode_two_fields(model: SentenceTransformer,
                        tags_texts: list[str]) -> tuple[np.ndarray, np.ndarray]:
     semantic_vectors = model.encode(
         semantic_texts,
-        batch_size=EmbeddingParameters.MODEL_BATCH_SIZE,
+        batch_size=settings.MODEL_BATCH_SIZE,
         normalize_embeddings=True,
         show_progress_bar=False
     )
 
     tags_vectors = model.encode(
         tags_texts,
-        batch_size=EmbeddingParameters.MODEL_BATCH_SIZE,
+        batch_size=settings.MODEL_BATCH_SIZE,
         normalize_embeddings=True,
         show_progress_bar=False
     )
@@ -111,7 +111,7 @@ def _encode_two_fields(model: SentenceTransformer,
 
 
 def _combine(semantic_vectors: np.ndarray, tags_vectors: np.ndarray) -> np.ndarray:
-    combined = EmbeddingParameters.SEMANTIC_WEIGHT * semantic_vectors + EmbeddingParameters.TAGS_WEIGHT * tags_vectors
+    combined = settings.SEMANTIC_WEIGHT * semantic_vectors + settings.TAGS_WEIGHT * tags_vectors
     norms = np.linalg.norm(combined, axis=1, keepdims=True)
     norms = np.where(norms == 0, 1.0, norms)
 

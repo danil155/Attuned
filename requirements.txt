@@ -1,6 +1,7 @@
 dotenv==0.9.9
 requests==2.33.0
 pydantic==2.12.5
+pydantic-settings==2.13.1
 SQLAlchemy==2.0.48
 APScheduler==3.11.2
 asyncpg==0.31.0

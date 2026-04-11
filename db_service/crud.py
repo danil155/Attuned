@@ -9,7 +9,7 @@ from sqlalchemy import func, select, update, Float, delete, and_
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from config_vars import CrudParameters
+from config import settings
 from db_service.models import Game, SyncLog
 from db_service.models_user import UserData, UserCart, UserGameInteractions
 from igdb_service.schemas import IGDBGame
@@ -261,7 +261,7 @@ class UserDataCrud:
         raw_token = UserData.generate_access_token()
         hashed_token = hashlib.sha256(raw_token.encode()).hexdigest()
 
-        avatar_emoji = random.choice(CrudParameters.EMOJI_LIST)
+        avatar_emoji = random.choice(settings.emoji_list)
 
         user = UserData(external_id=external_id,
                         access_token=hashed_token,

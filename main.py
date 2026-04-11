@@ -7,8 +7,7 @@ from apscheduler.triggers.cron import CronTrigger
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from config import load_db_config, load_igdb_config
-from config_vars import MainParameters
+from config import load_db_config, load_igdb_config, settings
 from api import games, recommendations, genres, auth, interactions
 from db_service.connection import Database
 from db_service.migrations import run_migrations
@@ -64,8 +63,8 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     scheduler = AsyncIOScheduler()
     scheduler.add_job(
         lambda: _run_sync_then_embed(sync_service, embedding_service),
-        trigger=CronTrigger(hour=MainParameters.SYNC_HOUR,
-                            minute=MainParameters.SYNC_MINUTE,
+        trigger=CronTrigger(hour=settings.SYNC_HOUR,
+                            minute=settings.SYNC_MINUTE,
                             timezone='Europe/Moscow'),
         id='nightly_sync_and_embed',
         name='IGDB sync + embedding',
@@ -74,8 +73,8 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     )
     scheduler.add_job(
         lambda: _refresh_genres(igdb_client),
-        trigger=CronTrigger(hour=MainParameters.GENRES_REFRESH_HOUR,
-                            minute=MainParameters.GENRES_REFRESH_MINUTE,
+        trigger=CronTrigger(hour=settings.GENRES_REFRESH_HOUR,
+                            minute=settings.GENRES_REFRESH_MINUTE,
                             timezone='Europe/Moscow'),
         id='genres_refresh',
         name='Refresh genres cache',
@@ -84,9 +83,9 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     )
     scheduler.start()
     logger.info(f'Scheduler started: nightly sync at '
-                f'{MainParameters.SYNC_HOUR:02d}:{MainParameters.SYNC_MINUTE:02d} Moscow')
+                f'{settings.SYNC_HOUR:02d}:{settings.SYNC_MINUTE:02d} Moscow')
     logger.info(f'Scheduler started: refresh genres at '
-                f'{MainParameters.GENRES_REFRESH_HOUR:02d}:{MainParameters.GENRES_REFRESH_MINUTE:02d} Moscow')
+                f'{settings.GENRES_REFRESH_HOUR:02d}:{settings.GENRES_REFRESH_MINUTE:02d} Moscow')
 
     yield
 

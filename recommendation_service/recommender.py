@@ -6,7 +6,7 @@ from sqlalchemy import select
 from db_service.connection import Database
 from db_service.models import Game
 from db_service.crud import RecommendationCrud
-from config_vars import RecommendationParameters
+from config import settings
 from recommendation_service.schemas import RecommendationRequest, RecommendationResponse, RecommendedGame
 
 logger = logging.getLogger(__name__)
@@ -33,7 +33,7 @@ class RecommendationService:
 
             profile_vector = _build_profile(liked_embeddings)
 
-            candidate_limit = request.limit * RecommendationParameters.CANDIDATE_MULTIPLIER
+            candidate_limit = request.limit * settings.CANDIDATE_MULTIPLIER
             candidates = await repo.find_similar(
                 embedding=profile_vector.tolist(),
                 exclude_igdb_ids=list(exclude_ids),
@@ -59,7 +59,7 @@ class RecommendationService:
         return RecommendationResponse(
             items=items,
             total_seen=total_seen,
-            has_more=total_seen < RecommendationParameters.MAX_TOTAL
+            has_more=total_seen < settings.MAX_TOTAL
         )
 
 
@@ -87,9 +87,7 @@ def _score_candidates(candidates: list[Game],
 
         tags = _tags_score(game, liked_game_tags)
         niche = _niche_boost(game, max_rating_count)
-        final = RecommendationParameters.ALPHA * semantic \
-                + RecommendationParameters.BETA * tags \
-                + RecommendationParameters.GAMMA * niche
+        final = settings.ALPHA * semantic + settings.BETA * tags + settings.GAMMA * niche
 
         result.append((game, {
             'semantic': round(semantic, 4),
@@ -106,7 +104,7 @@ def _tags_score(game: Game, liked_game_tags: list[dict]) -> float:
         return 0.0
 
     field_scores = []
-    for field, weight in RecommendationParameters.TAG_WEIGHTS.items():
+    for field, weight in settings.tag_weights_dict.items():
         candidate_tags = set(getattr(game, field, None) or [])
 
         if not candidate_tags:
@@ -125,7 +123,7 @@ def _tags_score(game: Game, liked_game_tags: list[dict]) -> float:
         if jaccard_scores:
             field_scores.append(weight * (sum(jaccard_scores) / len(jaccard_scores)))
 
-    total_weight = sum(w for f, w in RecommendationParameters.TAG_WEIGHTS.items() if getattr(game, f, None))
+    total_weight = sum(w for f, w in settings.tag_weights_dict.items() if getattr(game, f, None))
 
     return sum(field_scores) / total_weight if total_weight > 0 else 0.0
 
