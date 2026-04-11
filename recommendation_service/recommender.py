@@ -170,7 +170,7 @@ def _to_response(game: Game, scores: dict) -> RecommendedGame:
         igdb_url=game.igdb_url,
         genres=game.genres or [],
         platforms=game.platforms or [],
-        rating=game.rating,
+        rating=round(game.rating, 2),
         first_release_date=release,
         match_percent=min(100, round(scores['final'] * 100))
     )
