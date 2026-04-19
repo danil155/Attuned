@@ -9,3 +9,5 @@ target/
 __pypackages__/
 
 .env
+
+/SteamReviewDataset1M
