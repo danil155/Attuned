@@ -3,8 +3,7 @@ import logging
 import numpy as np
 from sentence_transformers import SentenceTransformer
 
-from db_service.connection import Database
-from db_service.crud import EmbeddingCrud
+from db_service import Database, EmbeddingCrud
 from config import settings
 
 logger = logging.getLogger(__name__)
@@ -37,7 +36,7 @@ class EmbeddingService:
         processed = 0
         while True:
             async with self._db.background_session() as session:
-                rows = await EmbeddingCrud(session).get_games_without_embeddings(batch_size=settings.DB_BATH_SIZE)
+                rows = await EmbeddingCrud(session).get_games_without_embeddings(batch_size=settings.DB_BATCH_SIZE)
 
             if not rows:
                 break

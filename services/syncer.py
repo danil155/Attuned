@@ -1,9 +1,8 @@
 import logging
 from datetime import datetime, timedelta
 
-from db_service.connection import Database
-from db_service.crud import GameCrud, SyncLogCrud
-from igdb_service.client import IGDBClient
+from db_service import Database, GameCrud, SyncLogCrud
+from igdb_service import IGDBClient
 from config import settings
 
 logger = logging.getLogger(__name__)

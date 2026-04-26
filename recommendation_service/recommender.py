@@ -3,11 +3,10 @@ import math
 import numpy as np
 from sqlalchemy import select
 
-from db_service.connection import Database
+from db_service import Database, RecommendationCrud
 from db_service.models import Game
-from db_service.crud import RecommendationCrud
-from config import settings
 from recommendation_service.schemas import RecommendationRequest, RecommendationResponse, RecommendedGame
+from config import settings
 
 logger = logging.getLogger(__name__)
 

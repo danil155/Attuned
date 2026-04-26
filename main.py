@@ -9,13 +9,11 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from config import load_db_config, load_igdb_config, settings
 from api import games, recommendations, genres, auth, interactions
-from db_service.connection import Database
-from db_service.migrations import run_migrations
-from payment_db.connection import PaymentDatabase
-from igdb_service.client import IGDBClient
-from sync_service.syncer import SyncService
-from embedding_service.embedder import EmbeddingService
-from recommendation_service.recommender import RecommendationService
+from db_service import Database, run_migrations
+from payment_db import PaymentDatabase
+from igdb_service import IGDBClient
+from services import SyncService, EmbeddingService
+from recommendation_service import RecommendationService
 
 logger = logging.getLogger(__name__)
 

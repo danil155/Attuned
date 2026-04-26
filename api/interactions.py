@@ -2,7 +2,7 @@ import json
 import logging
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, status
 
-from db_service.crud import UserDataCrud, UserInteractionCrud, UserCartCrud, SearchCrud
+from db_service import UserDataCrud, UserInteractionCrud, UserCartCrud, SearchCrud
 
 logger = logging.getLogger(__name__)
 router = APIRouter(tags=['websocket'])

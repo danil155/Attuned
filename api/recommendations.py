@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 
-from recommendation_service.recommender import RecommendationService
+from recommendation_service import RecommendationService
 from recommendation_service.schemas import RecommendationRequest, RecommendationResponse
 
 router = APIRouter(prefix='/recommendations', tags=['recommendations'])

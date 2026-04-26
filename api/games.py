@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Query, Request, Depends
 
 from api.schemas import GameSearchResult, GameSearchResponse
-from db_service.crud import SearchCrud
+from db_service import SearchCrud
 
 router = APIRouter(prefix='/games', tags=['games'])
 

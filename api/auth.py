@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Header, Request
 
-from db_service.crud import UserDataCrud
+from db_service import UserDataCrud
 
 router = APIRouter(prefix='/auth', tags=['auth'])
 
