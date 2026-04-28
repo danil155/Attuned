@@ -44,7 +44,6 @@
             z-index 0ms step-start;
 }
 
-/* Match badge */
 .game-card__match {
     position: absolute;
     top: 10px;
@@ -76,7 +75,6 @@
     letter-spacing: 0.08em;
 }
 
-/* Cover */
 .game-card__cover-wrap {
     position: relative;
     flex-shrink: 0;
@@ -123,7 +121,6 @@
     color: var(--text);
 }
 
-/* Body */
 .game-card__body {
     padding: 12px 14px 14px;
     display: flex;
@@ -165,7 +162,6 @@
     font-weight: 500;
 }
 
-/* Footer */
 .game-card__footer {
     display: flex;
     align-items: center;
@@ -176,7 +172,6 @@
     border-top: 1px solid var(--border);
 }
 
-/* Basket Menu*/
 .basket-wrap {
     position: relative;
     min-width: 110px;
@@ -357,7 +352,6 @@
     color: var(--text-3);
 }
 
-/* Like / Dislike*/
 .game-card__actions {
     display: flex;
     gap: 5px;

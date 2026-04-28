@@ -8,7 +8,6 @@
     padding: 2.5rem 2rem 6rem;
 }
 
-/* Header */
 .recs-header {
     display: flex;
     align-items: center;
@@ -49,7 +48,6 @@
     font-weight: 500;
 }
 
-/* Loading */
 .recs-loading {
     display: flex;
     flex-direction: column;
@@ -83,7 +81,6 @@
     color: var(--text-3);
 }
 
-/* Skeleton */
 .skeleton-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
@@ -104,7 +101,6 @@
     50%       { opacity: 0.7; }
 }
 
-/* Controls */
 .recs-controls {
     display: flex;
     align-items: flex-start;
@@ -187,14 +183,12 @@
     background: var(--orange-dim);
 }
 
-/* Grid */
 .recs-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
     gap: 14px;
 }
 
-/* Empty */
 .recs-empty {
     padding: 4rem 0;
     text-align: center;
@@ -220,7 +214,50 @@
     border-color: var(--text-3);
 }
 
-/* Responsive */
+.load-more-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 3rem;
+    padding: 1rem 0;
+}
+
+.btn-more-bottom {
+    padding: 12px 28px;
+    font-size: 14px;
+    background: linear-gradient(135deg, var(--card) 0%, rgba(255, 107, 53, 0.05) 100%);
+    border: 1px solid var(--border-md);
+    border-radius: 40px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: all 0.25s ease;
+}
+
+.btn-more-bottom:hover {
+    transform: translateY(-2px);
+    border-color: var(--orange);
+    box-shadow: 0 6px 20px rgba(255, 107, 53, 0.2);
+    background: linear-gradient(135deg, var(--orange-dim) 0%, rgba(255, 107, 53, 0.1) 100%);
+}
+
+.btn-more-bottom:active {
+    transform: translateY(0);
+}
+
+.btn-more-spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid var(--border-md);
+    border-top-color: var(--orange);
+    border-radius: 50%;
+    display: inline-block;
+    animation: spin 600ms linear infinite;
+}
+
+.btn-more-bottom:disabled {
+    opacity: 0.6;
+    transform: none;
+    cursor: not-allowed;
+}
+
 @media (max-width: 768px) {
     .recs-page__inner { padding: 2rem 1rem 4rem; }
     .recs-controls { flex-direction: column; }

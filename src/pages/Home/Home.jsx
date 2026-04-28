@@ -20,10 +20,16 @@ export default function Home() {
 
     const hasActiveFilters = preFilters.platforms.length > 0 || preFilters.releasedOnly !== DEFAULT_PRE_FILTERS.releasedOnly;
 
-    // ИЗМЕНИТЬ НА РЕАЛЬНО ПОПУЛЯРНЫЕ ИГРЫ (ТЕ, КОТОРЫЕ ЛАЙКАЮТ ПОЛЬЗОВАТЕЛИ ATTUNED)
+    // TODO: ИЗМЕНИТЬ НА РЕАЛЬНО ПОПУЛЯРНЫЕ ИГРЫ
     useEffect(() => {
         searchGames("A", 10).then(setPopularGames).catch(console.error);
     }, []);
+
+    useEffect(() => {
+        if (selected.length === 0) {
+            setShowFilters(false);
+        }
+    }, [selected.length])
 
     const addGame = (game) => {
         if (selected.length >= QUICK_LIMIT)
@@ -68,9 +74,10 @@ export default function Home() {
                 only_released: preFilters.releasedOnly
             });
 
-            sessionStorage.setItem("attuned_recs", JSON.stringify(recs));
-            sessionStorage.setItem("attuned_source", JSON.stringify(selected.map((g) => g.name)));
-            sessionStorage.setItem("attuned_source_ids", JSON.stringify(liked_ids));
+            sessionStorage.setItem('attuned_recs', JSON.stringify(recs));
+            sessionStorage.setItem('attuned_source', JSON.stringify(selected.map((g) => g.name)));
+            sessionStorage.setItem('attuned_source_type', 'games');
+            sessionStorage.setItem('attuned_source_ids', JSON.stringify(liked_ids));
             navigate("/recommendations")
         } catch (error) {
             console.error('Error when receiving recommendations: ', error)
@@ -122,12 +129,6 @@ export default function Home() {
                         {hasActiveFilters && <span className="filters-dot" />}
                     </button>
                 </div>
-
-                {selected.length > 0 && (
-                    <div className="home__prefilters">
-                        <PreFilters filters={preFilters} onChange={setPreFilters} />
-                    </div>
-                )}
 
                 {/* SELECTED CHIPS */}
                 {selected.length > 0 && (

@@ -3,9 +3,11 @@ import { useApp } from "../../context/AppContext";
 import "./GameCard.css";
 
 export function GameCard({ game, onDislike }) {
-    const { baskets, addGameToBasket, limits } = useApp();
+    const { baskets, addGameToBasket, limits, likeGame, dislikeGame, getInteraction } = useApp();
 
-    const [liked, setLiked] = useState(false);
+    const currentStatus = getInteraction(game.igdb_id);
+    const liked = currentStatus === 'like';
+
     const [dismissed, setDismissed] = useState(false);
     const [basketMenuOpen, setBasketMenuOpen] = useState(false);
     const [addedTo, setAddedTo] = useState(null);
@@ -19,6 +21,7 @@ export function GameCard({ game, onDislike }) {
     useEffect(() => {
         if (!basketMenuOpen)
             return;
+
         const handler = (e) => {
             if (menuRef.current && !menuRef.current.contains(e.target)
                 && containerRef.current && !containerRef.current.contains(e.target)) {
@@ -93,17 +96,19 @@ export function GameCard({ game, onDislike }) {
             setTimeout(() => btn.classList.remove('action-btn--animate'), 300);
         }
 
+        dislikeGame(game.igdb_id, game);
         setDismissed(true);
         setTimeout(() => onDislike?.(game.igdb_id), 320);
     };
 
     const handleLike = () => {
-        setLiked((v) => !v);
         const btn = document.activeElement;
         if (btn?.classList?.contains('action-btn')) {
             btn.classList.add('action-btn--animate');
             setTimeout(() => btn.classList.remove('action-btn--animate'), 300);
         }
+
+        likeGame(game.igdb_id, game);
     };
 
     const handleAddToBasket = (basketId) => {
@@ -183,9 +188,9 @@ export function GameCard({ game, onDislike }) {
                                  onMouseEnter={handleMouseEnterMenu}
                                  onMouseLeave={handleMouseLeaveMenu}
                             >
-                                {baskets.map((b) => {
+                                {baskets.filter((b) => !b.isVirtual).map((b) => {
                                     const full = b.games.length >= limits.gamesPerBasket;
-                                    const inIt = b.games.some((g) => g.igdb_id === game.igdb_id);
+                                    const inIt = b.games.includes(game.igdb_id);
                                     const justAdded = addedTo === b.id;
                                     return (
                                         <button

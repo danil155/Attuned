@@ -3,8 +3,8 @@ import { searchGames } from "../../api";
 import "./SearchDropdown.css";
 
 
-export function SearchDropdown({ excludeIds = [], onSelect, placeholder = "Найди игру…", disabled = false }) {
-    const [query, setQuery] = useState("");
+export function SearchDropdown({ excludeIds = [], onSelect, placeholder = "Найди игру...", disabled = false }) {
+    const [query, setQuery] = useState('');
     const [open, setOpen] = useState(false);
     const [results, setResults] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -24,7 +24,7 @@ export function SearchDropdown({ excludeIds = [], onSelect, placeholder = "На�
                 const gamesArray = data.items || [];
                 setResults(gamesArray.filter(g => !excludeIds.includes(g.igdb_id)));
             } catch (error) {
-                console.error("Search error: ", error);
+                console.error('Search error: ', error);
             } finally {
                 setLoading(false);
             }
@@ -40,13 +40,13 @@ export function SearchDropdown({ excludeIds = [], onSelect, placeholder = "На�
             }
         };
 
-        document.addEventListener("mousedown", handler);
-        return () => document.removeEventListener("mousedown", handler);
+        document.addEventListener('mousedown', handler);
+        return () => document.removeEventListener('mousedown', handler);
     }, []);
 
     const handleSelect = (game) => {
         onSelect(game);
-        setQuery("");
+        setQuery('');
         setOpen(false);
         inputRef.current?.focus();
     };

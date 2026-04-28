@@ -52,7 +52,6 @@ export function PreFilters({ filters, onChange }) {
             </div>
 
             <div className="pre-filters__body">
-                {/* Released only toggle */}
                 <label className="pf-toggle-row">
                     <span className="pf-toggle-text">
                         <span className="pf-toggle-title">Только вышедшие игры</span>
@@ -68,7 +67,6 @@ export function PreFilters({ filters, onChange }) {
                     </button>
                 </label>
 
-                {/* Platforms */}
                 <div className="pf-group">
                     <div className="pf-group__head">
                         <span className="pf-group__label">Платформы</span>
@@ -93,7 +91,7 @@ export function PreFilters({ filters, onChange }) {
                         ))}
                     </div>
                     {filters.platforms.length === 0 && (
-                        <p className="pf-hint">Не выбрано — подбираем по всем платформам</p>
+                        <p className="pf-hint">Не выбрано - подбираем по всем платформам</p>
                     )}
                 </div>
             </div>

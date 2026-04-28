@@ -4,8 +4,8 @@ import "./RecsFilters.css";
 export const DEFAULT_FILTERS = {
     releasedOnly: false,
     minRating: 0,
-    genres: [],        // [] = все жанры
-    platforms: [],     // [] = все платформы
+    genres: [],
+    platforms: [],
 };
 
 const MIN_RATING_OPTIONS = [
@@ -65,7 +65,6 @@ export function RecsFilters({ genres = [], platforms = [], filters, onChange }) 
                 <div className="filters-panel">
                     <div className="filters-row">
 
-                        {/* Released only */}
                         <label className="filter-toggle-row">
                             <span className="filter-toggle-label">Только вышедшие игры</span>
                             <button
@@ -78,7 +77,6 @@ export function RecsFilters({ genres = [], platforms = [], filters, onChange }) 
                             </button>
                         </label>
 
-                        {/* Min rating */}
                         <div className="filter-group">
                             <p className="filter-group__label">Минимальный рейтинг</p>
                             <div className="filter-chips">
@@ -95,7 +93,6 @@ export function RecsFilters({ genres = [], platforms = [], filters, onChange }) 
                         </div>
                     </div>
 
-                    {/* Genres */}
                     {genres.length > 0 && (
                         <div className="filter-group">
                             <p className="filter-group__label">
@@ -120,7 +117,6 @@ export function RecsFilters({ genres = [], platforms = [], filters, onChange }) 
                         </div>
                     )}
 
-                    {/* Platforms */}
                     {platforms.length > 0 && (
                         <div className="filter-group">
                             <p className="filter-group__label">

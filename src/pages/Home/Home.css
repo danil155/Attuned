@@ -4,7 +4,6 @@
     padding: 0 2rem 6rem;
 }
 
-/* ── Hero ── */
 .hero {
     padding: 5rem 0 4rem;
     position: relative;
@@ -90,7 +89,6 @@
     width: 100%;
 }
 
-/* ── Chips ── */
 .chips-wrap { margin-bottom: 2rem; }
 
 .chips-label {
@@ -162,7 +160,6 @@
 }
 .chip__remove:hover { color: var(--text); }
 
-/* ── Controls ── */
 .hero__controls {
     display: flex;
     align-items: flex-end;
@@ -243,7 +240,6 @@
     box-shadow: none;
 }
 
-/* ── Section shared ── */
 .section-eyebrow {
     font-size: 11px;
     font-weight: 500;
@@ -261,7 +257,6 @@
     margin-bottom: 1.5rem;
 }
 
-/* ── Starter packs ── */
 .packs-section {
     padding: 3rem 0 0;
     border-top: 1px solid var(--border);
@@ -372,7 +367,6 @@
     box-shadow: 0 0 8px var(--orange);
 }
 
-/* ── Popular ── */
 .popular-section {
     padding: 3rem 0 0;
     border-top: 1px solid var(--border);
@@ -434,7 +428,6 @@
     padding: 0 9px 8px;
 }
 
-/* ── Responsive ── */
 @media (max-width: 768px) {
     .home { padding: 0 1rem 4rem; }
     .hero { padding: 3rem 0 2.5rem; }

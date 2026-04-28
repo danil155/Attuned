@@ -60,7 +60,6 @@
     gap: 0;
 }
 
-/* Toggle row */
 .pf-toggle-row {
     display: flex;
     align-items: center;
@@ -91,7 +90,6 @@
     color: var(--text-3);
 }
 
-/* Toggle switch */
 .toggle-switch {
     width: 42px;
     height: 24px;
@@ -125,7 +123,6 @@
     background: #fff;
 }
 
-/* Platform group */
 .pf-group {
     padding: 14px 16px;
     display: flex;

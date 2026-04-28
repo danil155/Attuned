@@ -1,15 +1,18 @@
-import {createContext, useContext, useState, useCallback, useEffect} from "react";
+import {createContext, useCallback, useContext, useEffect, useMemo, useState} from "react";
 import {getGenres} from "../api";
+import {useAuth} from "./AuthContext";
+import wsService from "../services/wsService";
 
 const AppContext = createContext(null);
 const GenresContext = createContext(null);
-
-const DEFAULT_BASKET = { id: "basket-1", name: "Моя коллекция", games: [] };
 
 const BASKET_LIMITS = {
     free: { baskets: 1, gamesPerBasket: 30 },
     pro:  { baskets: 5, gamesPerBasket: 50 },
 };
+
+export const LIKES_BASKET_ID = '__likes__';
+export const DISLIKES_BASKET_ID = '__dislikes__';
 
 export const STARTER_PACKS = [
     {
@@ -71,103 +74,319 @@ export function GenresProvider({ children }) {
 }
 
 export function AppProvider({ children }) {
-    const [isPro, setIsPro] = useState(false);
-    const [baskets, setBaskets] = useState([DEFAULT_BASKET]);
-    const [activeBasketId, setActiveBasketId] = useState("basket-1");
-    const [pendingBasketId, setPendingBasketId] = useState(null);
+    const { user } = useAuth();
 
+    const isPro = user?.is_pro ?? false;
     const limits = isPro ? BASKET_LIMITS.pro : BASKET_LIMITS.free;
 
-    // КОРЗИНЫ
+    const [carts, setCarts] = useState([]);
+    const [activeBasketId, setActiveBasketId] = useState(LIKES_BASKET_ID);
+    const [interactions, setInteractions] = useState(new Map());
+
+    const likesBasket = useMemo(() => {
+        const games = [];
+        const gameObjects = [];
+        interactions.forEach(({ status, game }, igdb_id) => {
+            if (status === 'like') {
+                games.push(igdb_id);
+                if (game)
+                    gameObjects.push(game);
+            }
+        });
+
+        return {
+            id: LIKES_BASKET_ID,
+            name: 'Мне нравится',
+            isVirtual: true,
+            games,
+            _gameObjects: gameObjects
+        };
+    }, [interactions]);
+
+    const dislikesBasket = useMemo(() => {
+        const games = [];
+        const gameObjects = [];
+        interactions.forEach(({ status, game }, igdb_id) => {
+            if (status === 'dislike') {
+                games.push(igdb_id);
+                if (game) gameObjects.push(game);
+            }
+        });
+
+        return {
+            id: DISLIKES_BASKET_ID,
+            name: 'Мои дизлайки',
+            isVirtual: true,
+            games,
+            _gameObjects: gameObjects,
+        };
+    }, [interactions]);
+
+    const baskets = useMemo(
+        () => [likesBasket, dislikesBasket, ...carts],
+        [likesBasket, dislikesBasket, carts]
+    );
+
+    // SUBSCRIPTIONS
+
+    useEffect(() => {
+        const offs = [
+            wsService.on('sync_state', (msg) => {
+                const gamesMap = new Map();
+                (msg.games || []).forEach(game => {
+                    gamesMap.set(game.igdb_id, game);
+                });
+
+                const incoming = (msg.carts ?? []).map((c) => ({
+                    id: c.id,
+                    name: c.name,
+                    games: c.games ?? [],
+                    _gameObjects: (c.games ?? [])
+                        .map(id => gamesMap.get(id))
+                        .filter(game => game !== undefined)
+                }));
+
+                setCarts(incoming);
+                setActiveBasketId((prev) => {
+                    if (prev !== LIKES_BASKET_ID && prev !== DISLIKES_BASKET_ID)
+                        return prev;
+
+                    return prev;
+                });
+
+                const map = new Map();
+                (msg.interactions ?? []).forEach((i) => {
+                    if (i.status && i.status !== 'None') {
+                        const gameData = i.game || gamesMap.get(i.igdb_id);
+                        map.set(i.igdb_id, {
+                            status: i.status,
+                            game: gameData || null
+                        });
+                    }
+                });
+                setInteractions(map);
+            }),
+
+            wsService.on('cart_created', (msg) => {
+                const cart = {
+                    id: msg.cart.id,
+                    name: msg.cart.name,
+                    games: msg.cart.games ?? [],
+                    _gameObjects: []
+                };
+
+                setCarts((prev) => [...prev, cart]);
+                setActiveBasketId(cart.id);
+            }),
+
+            wsService.on('update', (msg) => {
+                if (msg.target === 'cart') {
+                    setCarts((prev) => applyCartUpdate(prev, msg));
+                }
+                if (msg.target === 'interaction') {
+                    setInteractions((prev) => {
+                        const next = new Map(prev);
+                        if (!msg.status || msg.status === 'None')
+                            next.delete(msg.igdb_id);
+                        else {
+                            const existing = prev.get(msg.igdb_id);
+                            const gameData = msg.game || existing?.game || null;
+                            next.set(msg.igdb_id, {
+                                status: msg.status,
+                                game: gameData
+                            });
+                        }
+
+                        return next;
+                    });
+                }
+            }),
+        ];
+
+        return () => offs.forEach((off) => off());
+    }, []);
+
+    // CARTS
 
     const addBasket = useCallback((name) => {
-        if (baskets.length >= limits.baskets)
+        if (carts.length >= limits.baskets)
             return false;
 
-        const id = `basket-${Date.now()}`;
-        setBaskets((prev) => [...prev, { id, name, games: [] }]);
-        setActiveBasketId(id);
+        wsService.createCart(name);
 
         return true;
-    }, [baskets, limits.baskets]);
+    }, [carts.length, limits.baskets]);
 
     const removeBasket = useCallback((id) => {
-        setBaskets((prev) => {
+        wsService.deleteCart(id);
+        setCarts((prev) => {
             const next = prev.filter((b) => b.id !== id);
-            if (activeBasketId === id && next.length > 0) setActiveBasketId(next[0].id);
+            setActiveBasketId((cur) => cur === id ? (next[0]?.id ?? LIKES_BASKET_ID) : cur);
 
             return next;
         });
-    }, [activeBasketId]);
-
-    const renameBasket = useCallback((id, name) => {
-        setBaskets((prev) => prev.map((b) => b.id === id ? { ...b, name } : b));
     }, []);
 
-    // ИГРЫ В КОРЗИНЕ
+    const renameBasket = useCallback((id, name) => {
+        wsService.renameCart(id, name);
+        setCarts((prev) => prev.map((b) => b.id === id ? { ...b, name } : b));
+    }, []);
+
+    const refreshBasket = useCallback((cartId) => {
+        wsService.refreshCart(cartId);
+    }, []);
+
+    // GAME IN CART
 
     const addGameToBasket = useCallback((basketId, game) => {
-        setBaskets((prev) => prev.map((b) => {
-            if (b.id !== basketId)
-                return b;
+        setCarts((prev) => {
+            const basket = prev.find((b) => b.id === basketId);
+            if (!basket)
+                return prev;
+            if (basket.games.length >= limits.gamesPerBasket)
+                return prev;
+            if (basket.games.includes(game.igdb_id))
+                return prev;
 
-            if (b.games.length >= limits.gamesPerBasket)
-                return b;
+            wsService.addToCart(basketId, game.igdb_id);
 
-            if (b.games.find((g) => g.igdb_id === game.igdb_id))
-                return b;
-
-            return { ...b, games: [...b.games, game] };
-        }));
+            return prev.map((b) => b.id === basketId ? {
+                ...b,
+                games: [...b.games, game.igdb_id],
+                _gameObjects: [...(b._gameObjects ?? []), game],
+            } : b);
+        });
     }, [limits.gamesPerBasket]);
 
-    const removeGameFromBasket = useCallback((basketId, gameId) => {
-        setBaskets((prev) => prev.map((b) =>
-            b.id === basketId ? { ...b, games: b.games.filter((g) => g.igdb_id !== gameId) } : b
-        ));
+    const removeGameFromBasket = useCallback((basketId, igdb_id) => {
+        if (basketId === LIKES_BASKET_ID || basketId === DISLIKES_BASKET_ID) {
+            wsService.removeInteraction(igdb_id);
+            setInteractions((prev) => {
+                const m = new Map(prev);
+                m.delete(igdb_id);
+                return m;
+            });
+
+            return;
+        }
+
+        wsService.removeFromCart(basketId, igdb_id);
+        setCarts((prev) => prev.map((b) => b.id === basketId ? {
+            ...b,
+            games: b.games.filter((id) => id !== igdb_id),
+            _gameObjects: (b._gameObjects ?? []).filter((g) => g.igdb_id !== igdb_id),
+            } : b));
     }, []);
 
     const fillBasketFromPack = useCallback((basketId, games) => {
-        setBaskets((prev) => prev.map((b) => {
-            if (b.id !== basketId) return b;
-            const existing = new Set(b.games.map((g) => g.igdb_id));
-            const toAdd = games.filter((g) => !existing.has(g.igdb_id));
-            const combined = [...b.games, ...toAdd].slice(0, limits.gamesPerBasket);
-            return { ...b, games: combined };
-        }));
+        setCarts((prev) => {
+            const basket = prev.find((b) => b.id === basketId);
+            if (!basket)
+                return prev;
+
+            const existing = new Set(basket.games);
+            const toAdd = games.filter((g) => !existing.has(g.igdb_id))
+                .slice(0, limits.gamesPerBasket - basket.games.length);
+            toAdd.forEach((g) => wsService.addToCart(basketId, g.igdb_id));
+
+            return prev.map((b) => b.id === basketId ? {
+                ...b,
+                games: [...b.games, ...toAdd.map((g) => g.igdb_id)],
+                _gameObjects: [...(b._gameObjects ?? []), ...toAdd],
+            } : b);
+        });
     }, [limits.gamesPerBasket]);
 
     const getBasket = useCallback((id) => baskets.find((b) => b.id === id), [baskets]);
 
-    // ПРОЧЕЕ
+    // INTERACTION
+
+    const likeGame = useCallback((igdb_id, game = null) => {
+        wsService.like(igdb_id);
+        setInteractions((prev) => {
+            const next = new Map(prev);
+            next.set(igdb_id, { status: 'like', game: game ?? prev.get(igdb_id)?.game ?? null });
+
+            return next;
+        });
+    }, []);
+
+    const dislikeGame = useCallback((igdb_id, game = null) => {
+        wsService.dislike(igdb_id);
+        setInteractions((prev) => {
+            const next = new Map(prev);
+            next.set(igdb_id, { status: 'dislike', game: game ?? prev.get(igdb_id)?.game ?? null });
+
+            return next;
+        });
+    }, []);
+
+    const removeInteraction = useCallback((igdb_id) => {
+        wsService.removeInteraction(igdb_id);
+        setInteractions((prev) => {
+            const m = new Map(prev);
+            m.delete(igdb_id);
+            return m;
+        })
+    }, []);
+
+    const getInteraction = useCallback((igdb_id) => {
+        return interactions.get(igdb_id)?.status ?? null;
+    }, [interactions]);
 
     const value = {
-        isPro,
-        setIsPro,
-        baskets,
-        limits,
-        activeBasketId,
-        setActiveBasketId,
-        pendingBasketId,
-        setPendingBasketId,
-        addBasket,
-        removeBasket,
-        renameBasket,
-        addGameToBasket,
-        removeGameFromBasket,
-        fillBasketFromPack,
-        getBasket,
+        isPro, limits,
+        baskets, carts, activeBasketId, setActiveBasketId,
+        interactions,
+        addBasket, removeBasket, renameBasket, refreshBasket,
+        addGameToBasket, removeGameFromBasket, fillBasketFromPack, getBasket,
+        likeGame, dislikeGame, removeInteraction, getInteraction,
     };
 
     return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 }
 
 export function useApp() {
-    const ctx = useContext(AppContext);
-    if (!ctx) throw new Error("useApp must be used inside AppProvider");
-    return ctx;
+    return useContext(AppContext);
 }
 
 export function useGenres() {
     return useContext(GenresContext);
+}
+
+function applyCartUpdate(baskets, msg) {
+    switch (msg.action) {
+        case 'rename':
+            return baskets.map((b) => b.id === msg.cart_id
+                ? { ...b, name: msg.name ?? b.name }
+                : b);
+        case 'added':
+            return baskets.map((b) => b.id === msg.cart_id && !b.games.includes(msg.igdb_id)
+                ? {
+                ...b,
+                    games: [...b.games, msg.igdb_id],
+                    _gameObjects: b._gameObjects
+            }
+            : b);
+        case 'removed':
+            return baskets.map((b) => b.id === msg.cart_id
+                ? {
+                ...b,
+                    games: b.games.filter((id) => id !== msg.igdb_id),
+                    _gameObjects: (b._gameObjects ?? []).filter((g) => g.igdb_id !== msg.igdb_id)
+            }
+            : b);
+        case 'cleared':
+            return baskets.map((b) => b.id === msg.cart_id
+                ? { ...b, games: [], _gameObjects: [] }
+                : b);
+        case 'deleted':
+            return baskets.filter((b) => b.id !== msg.cart_id);
+        case 'refreshed':
+            return baskets.map((b) => b.id === msg.cart_id
+                ? { ...b, games: msg.games, _gameObjects: [] }
+                : b);
+        default:
+            return baskets;
+    }
 }

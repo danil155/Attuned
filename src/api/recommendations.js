@@ -6,7 +6,7 @@ export async function getRecommendations({
     seen_igdb_ids = [],
     limit = 10,
     platforms = [],
-    only_released = true
+    released_only = true
 }) {
     const { data } = await api.post('/recommendations/', {
         liked_igdb_ids,
@@ -14,7 +14,7 @@ export async function getRecommendations({
         seen_igdb_ids,
         limit,
         ...(platforms.length > 0 && { platforms }),
-        ...(only_released && { only_released }),
+        ...(released_only && { released_only }),
     });
 
     return data;
