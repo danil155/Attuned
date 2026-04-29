@@ -35,6 +35,17 @@ _USER_INDEXES = [
     'CREATE INDEX IF NOT EXISTS idx_user_interactions_composite ON user_game_interactions(user_id, igdb_id, interaction_type)',
 ]
 
+_SEARCH_INDEXES = [
+    'CREATE INDEX IF NOT EXISTS idx_games_search_vector ON games USING GIN (search_vector)',
+    'CREATE INDEX IF NOT EXISTS idx_games_search_boost ON games (search_boost) WHERE search_boost > 1.0',
+]
+
+_LIKE_INDEXES = [
+    'CREATE INDEX IF NOT EXISTS idx_user_interactions_likes_count ON user_game_interactions (igdb_id) WHERE interaction_type = \'like\'',
+    'CREATE INDEX IF NOT EXISTS idx_user_interactions_likes_group ON user_game_interactions (interaction_type, igdb_id) WHERE interaction_type = \'like\'',
+    'CREATE INDEX IF NOT EXISTS idx_user_interactions_likes_covering ON user_game_interactions (igdb_id, interaction_type) INCLUDE (user_id) WHERE interaction_type = \'like\'',
+]
+
 
 async def run_migrations(engine: AsyncEngine) -> None:
     logger.info('Running DB migrations')
@@ -46,7 +57,7 @@ async def run_migrations(engine: AsyncEngine) -> None:
         await conn.run_sync(Base.metadata.create_all)
         await conn.run_sync(UserBase.metadata.create_all)
 
-        for stmt in _GIN_INDEXES + _USER_INDEXES:
+        for stmt in _GIN_INDEXES + _USER_INDEXES + _SEARCH_INDEXES + _LIKE_INDEXES:
             await conn.execute(text(stmt))
 
         await conn.execute(text(_VECTOR_INDEX))

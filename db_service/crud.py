@@ -5,7 +5,7 @@ import hashlib
 import time
 import random
 from datetime import datetime, timezone, timedelta
-from sqlalchemy import func, select, update, Float, delete, and_
+from sqlalchemy import func, select, update, Float, delete, and_, text, case
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -30,7 +30,18 @@ class GameCrud:
 
         stmt = insert(Game).values(rows)
 
-        update_cols = {col: stmt.excluded[col] for col in rows[0] if col != 'igdb_id'}
+        update_cols = {}
+        for col in rows[0]:
+            if col in ['igdb_id', 'synced_at', 'search_vector']:
+                update_cols[col] = stmt.excluded[col]
+
+        update_cols['search_vector'] = text("""
+        setweight(to_tsvector('simple', COALESCE(excluded.name, '')), 'A') ||
+        setweight(to_tsvector('simple', COALESCE(excluded.slug, '')), 'B') ||
+        setweight(to_tsvector('simple', COALESCE(excluded.summary_small, '')), 'C') ||
+        setweight(to_tsvector('simple', COALESCE(excluded.storyline, '')), 'D')
+        """)
+
         update_cols['embedding'] = None
 
         stmt = stmt.on_conflict_do_update(
@@ -74,6 +85,7 @@ def _game_to_dict(game: IGDBGame) -> dict:
         'platforms': [e.name for e in game.platforms],
         'developers': game.developers,
         'summary_small': _extract_short_summary(game.summary),
+        'search_boost': _compute_search_boost(game),
         'rating': game.rating,
         'rating_count': game.rating_count,
         'aggregated_rating': game.aggregated_rating,
@@ -114,6 +126,29 @@ def _extract_short_summary(summary: str | None, max_len: int = 110) -> str | Non
         first_sentence = first_sentence[0].upper() + first_sentence[1:]
 
     return first_sentence
+
+
+def _compute_search_boost(game: IGDBGame) -> float:
+    boost = 1.0
+
+    if game.aggregated_rating:
+        boost += (game.aggregated_rating / 100.0) * 0.5
+
+    rating_count = game.aggregated_rating_count or game.rating_count
+    if rating_count:
+        boost += min(rating_count / 100000.0, 0.3)
+
+    if game.hypes:
+        boost += min(game.hypes / 50000.0, 0.2)
+
+    if game.first_release_datetime:
+        days_ago = (datetime.utcnow() - game.first_release_datetime).days
+        if days_ago < 365:
+            boost += 0.2
+        elif days_ago < 1095:
+            boost += 0.1
+
+    return round(boost, 2)
 
 
 class SyncLogCrud:
@@ -234,10 +269,23 @@ class SearchCrud:
         self._session = session
 
     async def search_by_name(self, query: str, limit: int = 20) -> list[Game]:
+        clean_query = query.strip().lower()
+        ts_query = func.plainto_tsquery('simple', query)
+
+        score = (
+            case((func.lower(Game.name) == clean_query, 100.0), else_=0.0) +
+            case((func.lower(Game.name).like(f'{clean_query}%'), 50.0), else_=0.0) +
+            func.coalesce(
+                func.ts_rank_cd(Game.search_vector, ts_query) * 10.0 * Game.search_boost,
+                0.0
+            ) +
+            func.similarity(Game.name, query) * 3.0
+        )
+
         result = await self._session.execute(
             select(Game)
-            .where(Game.name.bool_op('%')(query), Game.embedding.is_not(None))
-            .order_by(func.similarity(Game.name, query).desc())
+            .where((func.similarity(Game.name, query) > 0.1) | (Game.search_vector.op('@@')(ts_query)))
+            .order_by(score.desc())
             .limit(limit)
         )
 
@@ -300,21 +348,8 @@ class UserDataCrud:
 
         return new_raw_token
 
-    async def get_user_by_external_id(self, external_id: str) -> UserData | None:
-        result = await self._session.execute(
-            select(UserData)
-            .where(UserData.external_id == external_id)
-        )
-        user = result.scalar_one_or_none()
-
-        if user and user.is_pro and user.pro_expires_at and datetime.utcnow() > user.pro_expires_at:
-            user.is_pro = False
-            await self._session.flush()
-
-        return user
-
-    async def activate_pro(self, external_id: str) -> bool:
-        expires_at = datetime.utcnow() + timedelta(days=31)
+    async def activate_pro(self, external_id: str, days: int = 31) -> bool:
+        expires_at = datetime.utcnow() + timedelta(days=days)
 
         result = await self._session.execute(
             update(UserData)
@@ -523,3 +558,35 @@ class UserInteractionCrud:
             .where(and_(UserGameInteractions.user_id == user_id,
                         UserGameInteractions.igdb_id == igdb_id))
         )
+
+
+class PopularGamesCrud:
+    def __init__(self, session: AsyncSession) -> None:
+        self._session = session
+        self._cache = {}
+        self._cache_timeout = 300
+
+    async def get_popular_games_by_likes(self, limit: int = 10, force_refresh: bool = False) -> list[Game]:
+        cache_key = f'popular_{limit}'
+
+        if not force_refresh and cache_key in self._cache:
+            cached_time, cached_games = self._cache[cache_key]
+            if (datetime.utcnow() - cached_time).total_seconds() < self._cache_timeout:
+                return cached_games
+
+        stmt = (
+            select(Game, func.count(UserGameInteractions.igdb_id).label('likes_count'))
+            .join(UserGameInteractions,
+                  and_(Game.igdb_id == UserGameInteractions.igdb_id, UserGameInteractions.interaction_type == 'like'),
+                  isouter=False)
+            .group_by(Game.id)
+            .order_by(func.count(UserGameInteractions.igdb_id).desc())
+            .limit(limit)
+        )
+
+        result = await self._session.execute(stmt)
+        games = [row[0] for row in result.all()]
+
+        self._cache[cache_key] = (datetime.utcnow(), games)
+
+        return games

@@ -2,6 +2,7 @@ from datetime import datetime
 from sqlalchemy import ARRAY, SMALLINT, Float, Integer, Text, UniqueConstraint
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from sqlalchemy.sql import func
+from sqlalchemy.dialects.postgresql import TSVECTOR
 from pgvector.sqlalchemy import Vector
 
 from config import settings
@@ -38,6 +39,9 @@ class Game(Base):
     summary_small: Mapped[str | None] = mapped_column(Text)
 
     embedding: Mapped[list[float] | None] = mapped_column(Vector(settings.EMBEDDINGS_DIM), nullable=True)
+
+    search_vector: Mapped[any] = mapped_column(TSVECTOR, nullable=True)
+    search_boost: Mapped[float] = mapped_column(Float, server_default='1.0', nullable=False)
 
     rating: Mapped[float | None] = mapped_column(Float)
     rating_count: Mapped[int | None] = mapped_column(Integer)
