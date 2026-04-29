@@ -85,7 +85,9 @@ export function SearchDropdown({ excludeIds = [], onSelect, placeholder = "На�
                         results.map((g) => (
                             <button key={g.igdb_id} className="sd-item" onClick={() => handleSelect(g)}>
                                 <div className="sd-cover" style={{ backgroundImage: `url(${g.cover_url})` }}>
-                                    <span>{g.name ? g.name[0] : "?"}</span>
+                                    {!g.cover_url && (
+                                        <span>{g.name ? g.name[0] : "?"}</span>
+                                    )}
                                 </div>
                                 <div className="sd-info">
                                     <span className="sd-title">{g.name}</span>

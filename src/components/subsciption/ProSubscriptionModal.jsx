@@ -1,9 +1,13 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { activatePromoCode } from "../../api";
+import { useAuth } from "../../context/AuthContext";
 import "./ProSubscriptionModal.css";
 
 export default function ProSubscriptionModal({ isOpen, onClose, onSuccess }) {
+    const { token } = useAuth();
+
     const [promoCode, setPromoCode] = useState("");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -54,26 +58,21 @@ export default function ProSubscriptionModal({ isOpen, onClose, onSuccess }) {
         setLoading(true);
         setError(null);
 
-        // TODO: Заменить на реальный API вызов
         try {
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            const result = await activatePromoCode(token, promoCode.trim().toUpperCase());
 
-            if (promoCode.toUpperCase() === "PRO2026" || promoCode.toUpperCase() === "ATTUNED") {
+            if (result.success) {
                 setSuccess(true);
 
                 setTimeout(() => {
                     onSuccess?.();
                     onClose();
-                    setTimeout(() => {
-                        setSuccess(false);
-                        setPromoCode('');
-                    }, 300);
-                }, 3000);
-            } else {
-                setError("Неверный промокод");
+                    setSuccess(false);
+                    setPromoCode('');
+                }, 2000);
             }
         } catch (err) {
-            setError("Ошибка активации промокода");
+            setError(err.response?.data?.detail || "Неверный промокод");
         } finally {
             setLoading(false);
         }
@@ -197,15 +196,19 @@ export default function ProSubscriptionModal({ isOpen, onClose, onSuccess }) {
                                     <div className="pro-features">
                                         <div className="pro-feature">
                                             <span className="pro-feature__check">✓</span>
-                                            <span>До 5 коллекций вместо 1</span>
+                                            <span>До <strong>5 коллекций</strong> вместо 1</span>
                                         </div>
                                         <div className="pro-feature">
                                             <span className="pro-feature__check">✓</span>
-                                            <span>До 50 игр в коллекции вместо 30</span>
+                                            <span>До <strong>50 игр в коллекции</strong> вместо 30</span>
                                         </div>
                                         <div className="pro-feature">
                                             <span className="pro-feature__check">✓</span>
-                                            <span>Приоритетная поддержка</span>
+                                            <span><strong>Приоритетная поддержка</strong></span>
+                                        </div>
+                                        <div className="pro-feature">
+                                            <span className="pro-feature__check">✓</span>
+                                            <span><strong>Уважение</strong> от окружающих</span>
                                         </div>
                                     </div>
 

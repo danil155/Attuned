@@ -9,7 +9,7 @@ export default function Footer() {
                     <img src={logo} alt="Attuned" style={{ width: 36, height: 36, objectFit: 'contain' }} />
                     <span>ATTUNED</span>
                 </div>
-                <p className="footer__copy">©2026 @putka_sok · v0.1.4 beta</p>
+                <p className="footer__copy">©2026 @putka_sok · v0.1.5 beta</p>
                 <p className="footer__legal">Все права защищены.</p>
             </div>
         </footer>

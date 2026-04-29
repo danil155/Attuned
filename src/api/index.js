@@ -1,5 +1,6 @@
-export { searchGames, searchGamesByIds } from './games'
+export { searchGames, searchGamesByIds, getPopularGames } from './games'
 export { getRecommendations } from './recommendations'
 export { getGenres } from './genres'
 export { generateAccount, regenerateToken, getMe, deleteAccount } from './auth'
 export { importSteamLibrary } from './steam'
+export { activatePromoCode } from './subscription'

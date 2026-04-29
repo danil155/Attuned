@@ -15,3 +15,11 @@ export async function searchGamesByIds(ids) {
 
     return data;
 }
+
+export async function getPopularGames(limit = 10) {
+    const { data } = await api.get('/games/popular', {
+        params: { limit },
+    });
+
+    return data;
+}

@@ -75,11 +75,27 @@ export function AuthProvider({ children }) {
     }, [saveToken]);
 
     const doDeleteAccount = useCallback(async () => {
-        if (!token) return;
+        if (!token)
+            return;
         await deleteAccount(token);
         wsService.disconnect();
         clearToken();
     }, [token, clearToken]);
+
+    const updateProStatus = useCallback(async () => {
+        if (!token)
+            return;
+
+        try {
+            const data = await getMe(token);
+            setUser(data);
+
+            return data;
+        } catch (error) {
+            console.error('Failed to refresh user data', error);
+            return null;
+        }
+    }, [token]);
 
     const value = {
         token,
@@ -92,6 +108,7 @@ export function AuthProvider({ children }) {
         doRegenerateToken,
         updateToken,
         doDeleteAccount,
+        updateProStatus,
     };
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -7,7 +7,7 @@ import logo from "../../assets/AttunedLogo512.png";
 import "./Header.css";
 
 export default function Header() {
-    const { user, token, doRegenerateToken, updateToken, doDeleteAccount, clearToken } = useAuth();
+    const { user, token, doRegenerateToken, updateToken, doDeleteAccount, clearToken, updateProStatus } = useAuth();
 
     const [menuOpen, setMenuOpen] = useState(false);
     const [regenLoading, setRegenLoading] = useState(false);
@@ -62,12 +62,13 @@ export default function Header() {
         setShowProModal(true);
     };
 
-    const handleProSuccess = () => {
-        // TODO: Обновить статус Pro у пользователя
+    const handleProSuccess = async () => {
+        await updateProStatus();
     }
 
     const handleLogout = () => {
         clearToken();
+        sessionStorage.clear();
         setMenuOpen(false);
     };
 
@@ -78,6 +79,7 @@ export default function Header() {
         }
 
         await doDeleteAccount();
+        sessionStorage.clear();
         setMenuOpen(false);
     };
 

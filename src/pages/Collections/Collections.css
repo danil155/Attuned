@@ -837,54 +837,145 @@
 
 .steam-import-success {
     display: flex;
-    gap: 10px;
-    padding: 12px 14px;
-    background: rgba(80, 200, 80, 0.08);
+    align-items: flex-start;
+    gap: 14px;
+    padding: 16px 18px;
+    background: linear-gradient(135deg, rgba(46, 125, 50, 0.12) 0%, rgba(27, 94, 32, 0.08) 100%);
+    border-left: 4px solid #4caf50;
     border-radius: var(--radius-md);
     margin-top: 1rem;
     font-size: 13px;
+    position: relative;
+    overflow: hidden;
+    animation: slideDown 0.4s cubic-bezier(0.2, 0.9, 0.4, 1.1);
 }
 
 .steam-import-success > span {
-    font-size: 16px;
+    font-size: 28px;
     flex-shrink: 0;
+    filter: drop-shadow(0 2px 4px rgba(76, 175, 80, 0.3));
+}
+
+.steam-import-success > div {
+    flex: 1;
 }
 
 .steam-import-success strong {
-    color: #80ff80;
-    font-weight: 600;
     display: block;
-    margin-bottom: 2px;
+    font-size: 15px;
+    font-weight: 700;
+    background: linear-gradient(135deg, #4caf50, #81c784);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 4px;
 }
 
 .steam-import-success p {
+    margin: 0 0 8px 0;
     color: var(--text-2);
-    margin: 0;
+    line-height: 1.5;
+}
+
+.steam-import-success p strong {
+    display: inline;
+    background: none;
+    background-clip: unset;
+    -webkit-background-clip: unset;
+    -webkit-text-fill-color: unset;
+    color: #4caf50;
+    font-size: 14px;
+}
+
+.steam-import-success--fade-out {
+    animation: fadeOutUp 0.4s ease-out forwards;
+}
+
+@keyframes fadeOutUp {
+    0% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(-12px);
+        visibility: hidden;
+    }
+}
+
+.steam-success-close {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--text-3);
+    font-size: 14px;
+    transition: all 0.2s ease;
+    padding: 0;
+}
+
+.steam-success-close:hover {
+    background: rgba(255, 255, 255, 0.2);
+    color: var(--text);
+    transform: scale(1.05);
+}
+
+.steam-success-progress {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 2px;
+    background: linear-gradient(90deg, #4caf50, #81c784);
+    border-radius: 0 0 0 var(--radius-md);
+    animation: shrinkProgress 4s linear forwards;
+}
+
+@keyframes shrinkProgress {
+    from {
+        width: 100%;
+    }
+    to {
+        width: 0%;
+    }
 }
 
 .steam-unmatched {
-    margin-top: 8px;
+    margin-top: 10px;
     font-size: 12px;
 }
 
 .steam-unmatched summary {
     cursor: pointer;
-    color: var(--text-3);
+    color: #4caf50;
     user-select: none;
+    font-weight: 500;
+    transition: color 0.2s ease;
 }
 
 .steam-unmatched summary:hover {
-    color: var(--text);
+    color: #66bb6a;
+    text-decoration: underline;
 }
 
 .steam-unmatched ul {
     margin: 8px 0 0 20px;
     padding: 0;
     color: var(--text-3);
+    max-height: 150px;
+    overflow-y: auto;
 }
 
 .steam-unmatched li {
     margin: 4px 0;
+    font-size: 11px;
 }
 
 .btn-spinner-small {
@@ -909,6 +1000,110 @@
 .basket-transition-wrapper--exiting {
     opacity: 0;
     transform: translateY(-8px);
+}
+
+.popconfirm-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    animation: fadeIn 0.2s ease-out;
+    isolation: isolate;
+}
+
+.popconfirm {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    max-width: 340px;
+    width: 90%;
+    box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.4);
+    animation: popIn 0.25s cubic-bezier(0.34, 1.2, 0.64, 1);
+}
+
+.popconfirm__icon {
+    font-size: 2rem;
+    text-align: center;
+    margin-bottom: 0.75rem;
+}
+
+.popconfirm__text {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text);
+    text-align: center;
+    margin-bottom: 0.5rem;
+}
+
+.popconfirm__sub {
+    font-size: 0.8rem;
+    color: var(--text-3);
+    text-align: center;
+    margin-bottom: 1.25rem;
+}
+
+.popconfirm__actions {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: center;
+}
+
+.popconfirm__btn {
+    padding: 0.5rem 1.25rem;
+    border-radius: 100px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    font-family: "Outfit", sans-serif;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+}
+
+.popconfirm__btn--secondary {
+    background: transparent;
+    border: 1px solid var(--border-md);
+    color: var(--text-2);
+}
+
+.popconfirm__btn--secondary:hover {
+    border-color: var(--text-3);
+    color: var(--text);
+}
+
+.popconfirm__btn--danger {
+    background: rgba(255, 80, 80, 0.15);
+    border: 1px solid rgba(255, 80, 80, 0.3);
+    color: #ff8080;
+}
+
+.popconfirm__btn--danger:hover {
+    background: rgba(255, 80, 80, 0.25);
+    border-color: #ff8080;
+    color: #ff9090;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes popIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95) translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
 }
 
 @media (max-width: 900px) {

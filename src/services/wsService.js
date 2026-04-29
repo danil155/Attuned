@@ -102,10 +102,6 @@ class WsService {
         this._send({ action: 'sync' });
     }
 
-    refreshCart(cart_id) {
-        this._send({ action: 'refresh_cart', cart_id });
-    }
-
     on(type, fn) {
         if (!this._listeners.has(type))
             this._listeners.set(type, new Set());

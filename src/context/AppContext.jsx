@@ -232,8 +232,17 @@ export function AppProvider({ children }) {
         setCarts((prev) => prev.map((b) => b.id === id ? { ...b, name } : b));
     }, []);
 
-    const refreshBasket = useCallback((cartId) => {
-        wsService.refreshCart(cartId);
+    const clearBasket = useCallback((basketId) => {
+        if (basketId === LIKES_BASKET_ID || basketId === DISLIKES_BASKET_ID) {
+            return;
+        }
+
+        wsService.clearCart(basketId);
+        setCarts((prev) => prev.map((b) =>
+            b.id === basketId
+                ? { ...b, games: [], _gameObjects: [] }
+                : b
+        ));
     }, []);
 
     // GAME IN CART
@@ -338,7 +347,7 @@ export function AppProvider({ children }) {
         isPro, limits,
         baskets, carts, activeBasketId, setActiveBasketId,
         interactions,
-        addBasket, removeBasket, renameBasket, refreshBasket,
+        addBasket, removeBasket, renameBasket, clearBasket,
         addGameToBasket, removeGameFromBasket, fillBasketFromPack, getBasket,
         likeGame, dislikeGame, removeInteraction, getInteraction,
     };
@@ -382,10 +391,6 @@ function applyCartUpdate(baskets, msg) {
                 : b);
         case 'deleted':
             return baskets.filter((b) => b.id !== msg.cart_id);
-        case 'refreshed':
-            return baskets.map((b) => b.id === msg.cart_id
-                ? { ...b, games: msg.games, _gameObjects: [] }
-                : b);
         default:
             return baskets;
     }

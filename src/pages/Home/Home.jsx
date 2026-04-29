@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { SearchDropdown, PreFilters } from "../../components/games";
 import { DEFAULT_PRE_FILTERS } from "../../components/games/PreFilters";
-import { getRecommendations, searchGames, searchGamesByIds } from "../../api";
+import { getRecommendations, getPopularGames, searchGamesByIds } from "../../api";
 import { STARTER_PACKS } from "../../context/AppContext";
 import "./Home.css";
 
@@ -20,9 +20,15 @@ export default function Home() {
 
     const hasActiveFilters = preFilters.platforms.length > 0 || preFilters.releasedOnly !== DEFAULT_PRE_FILTERS.releasedOnly;
 
-    // TODO: ИЗМЕНИТЬ НА РЕАЛЬНО ПОПУЛЯРНЫЕ ИГРЫ
     useEffect(() => {
-        searchGames("A", 10).then(setPopularGames).catch(console.error);
+        getPopularGames(10)
+            .then(response => {
+                const games = response?.items ?? response ?? [];
+                setPopularGames(games);
+            })
+            .catch(error => {
+                console.error('Failed to load popular games:', error);
+            });
     }, []);
 
     useEffect(() => {
@@ -104,7 +110,7 @@ export default function Home() {
                     ИГРУ
                 </h1>
                 <p className="hero__sub">
-                    Выбери до {QUICK_LIMIT} любимых игр — и мы построим персональную подборку,
+                    Выбери до {QUICK_LIMIT} любимых игр - и мы построим персональную подборку,
                     которая тебя не разочарует.
                 </p>
 
@@ -142,7 +148,9 @@ export default function Home() {
                                     <div className="chip__cover"
                                          style={{ backgroundImage: g.cover_url ? `url(${g.cover_url})` : "none"}}
                                     >
-                                        <span>{g.name?.[0] ?? "?"}</span>
+                                        {!g.cover_url && (
+                                            <span>{g.name?.[0] ?? "?"}</span>
+                                        )}
                                     </div>
                                     <span className="chip__name">{g.name}</span>
                                     <button className="chip__remove"
@@ -224,13 +232,15 @@ export default function Home() {
                     <p className="section-eyebrow">Популярные сейчас</p>
                     <div className="popular-grid">
                         {(popularGames?.items || popularGames || []).map((g) => (
-                            <button key={g.id}
+                            <button key={g.igdb_id}
                                     className="pop-card"
                                     onClick={() => addGame(g)}
                             >
                                 <div className="pop-card__cover"
                                      style={{ backgroundImage: g.cover_url ? `url(${g.cover_url})` : "none" }}>
-                                    <span>{g.name?.[0] ?? "?"}</span>
+                                    {!g.cover_url && (
+                                        <span>{g.name?.[0] ?? "?"}</span>
+                                    )}
                                 </div>
                                 <span className="pop-card__title">{g.name}</span>
                                 <span className="pop-card__year">
