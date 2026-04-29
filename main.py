@@ -8,10 +8,11 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from config import load_db_config, load_igdb_config, settings
-from api import games, recommendations, genres, auth, interactions
+from api import games, recommendations, genres, auth, interactions, steam, subscription
 from db_service import Database, run_migrations
 from payment_db import PaymentDatabase
 from igdb_service import IGDBClient
+from steam_service import SteamClient, SteamImporter
 from services import SyncService, EmbeddingService
 from recommendation_service import RecommendationService
 
@@ -44,23 +45,33 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     logger.info('Payment Database ready')
 
     igdb_client = IGDBClient(load_igdb_config())
+    steam_client = SteamClient()
 
     sync_service = SyncService(igdb_client=igdb_client, db=db)
     embedding_service = EmbeddingService(db=db)
     recommendation_service = RecommendationService(db=db)
+    steam_importer = SteamImporter(steam_client=steam_client, db=db)
 
     app.state.igdb_client = igdb_client
     app.state.db = db
     app.state.recommendation_service = recommendation_service
     app.state.payment_db = payment_db
+    app.state.steam_importer = steam_importer
 
     await _run_sync(sync_service)
     await _run_embedding(embedding_service)
     await _refresh_genres(igdb_client)
 
     scheduler = AsyncIOScheduler()
+
+    async def sync_then_embed_job():
+        await _run_sync_then_embed(sync_service, embedding_service)
+
+    async def refresh_genres_job():
+        await _refresh_genres(igdb_client)
+
     scheduler.add_job(
-        lambda: _run_sync_then_embed(sync_service, embedding_service),
+        sync_then_embed_job,
         trigger=CronTrigger(hour=settings.SYNC_HOUR,
                             minute=settings.SYNC_MINUTE,
                             timezone='Europe/Moscow'),
@@ -70,7 +81,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         misfire_grace_time=600
     )
     scheduler.add_job(
-        lambda: _refresh_genres(igdb_client),
+        refresh_genres_job,
         trigger=CronTrigger(hour=settings.GENRES_REFRESH_HOUR,
                             minute=settings.GENRES_REFRESH_MINUTE,
                             timezone='Europe/Moscow'),
@@ -134,10 +145,12 @@ def create_app() -> FastAPI:
         allow_headers=['*']
     )
 
-    app.include_router(recommendations.router, prefix='/api')
-    app.include_router(games.router, prefix='/api')
-    app.include_router(genres.router, prefix='/api')
-    app.include_router(auth.router, prefix='/api')
+    app.include_router(recommendations.router, prefix='/api/v1')
+    app.include_router(games.router, prefix='/api/v1')
+    app.include_router(genres.router, prefix='/api/v1')
+    app.include_router(auth.router, prefix='/api/v1')
+    app.include_router(steam.router, prefix='/api/v1')
+    app.include_router(subscription.router, prefix='/api/v1')
     app.include_router(interactions.router, prefix='/ws')
 
     return app

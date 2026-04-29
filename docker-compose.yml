@@ -35,6 +35,7 @@ services:
       DB_PASSWORD: ${DB_PASSWORD}
       IGDB_CLIENT_ID: ${IGDB_CLIENT_ID}
       IGDB_CLIENT_SECRET: ${IGDB_CLIENT_SECRET}
+      STEAM_API_KEY: ${STEAM_API_KEY}
     volumes:
       - model_cache:/cache/huggingface
     ports:

@@ -89,6 +89,14 @@ class Settings(BaseSettings):
     # CRUD Parameters
     EMOJI_LIST: str = Field('😁,😋,😳,😱,🥰,🤓,😎,🥵,😴,🤡,😈,😌,🤠,😨,🤭', alias='EMOJI_LIST')
 
+    # Steam Parameters
+    STEAM_API_KEY: str = Field(..., alias='STEAM_API_KEY')
+    STEAM_API_BASE: str = Field('https://api.steampowered.com', alias='STEAM_API_BASE')
+    STEAM_COMMUNITY_BASE: str = Field('https://steamcommunity.com', alias='STEAM_COMMUNITY_BASE')
+    RATE_LIMIT_DELAY: int = Field(1.0, alias='RATE_LIMIT_DELAY')
+
+    SIMILARITY_THRESHOLD: float = Field(0.4, alias='SIMILARITY_THRESHOLD')
+
     @property
     def allowed_game_types_tuple(self) -> tuple[int, ...]:
         return tuple(int(x.strip()) for x in self.ALLOWED_GAME_TYPES.split(','))

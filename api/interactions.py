@@ -28,18 +28,20 @@ async def websocket_interactions(websocket: WebSocket):
             if not user:
                 logger.warning(f'Failed WS auth attempt with token {token[:8]}...')
                 await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
+
                 return
 
             user_id = user.id
-            interaction_crud = UserInteractionCrud(session)
-            cart_crud = UserCartCrud(session)
-            search_crud = SearchCrud(session)
 
-            while True:
-                data = await websocket.receive_text()
-                message = json.loads(data)
+        while True:
+            data = await websocket.receive_text()
+            message = json.loads(data)
+            action = message.get('action')
 
-                action = message.get('action')
+            async with db.session() as session:
+                interaction_crud = UserInteractionCrud(session)
+                cart_crud = UserCartCrud(session)
+                search_crud = SearchCrud(session)
 
                 if action == 'sync':
                     interactions = await interaction_crud.get_all_interactions(user_id)
