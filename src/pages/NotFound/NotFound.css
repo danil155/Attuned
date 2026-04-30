@@ -1,0 +1,228 @@
+.not-found {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    padding: 2rem;
+    overflow: hidden;
+}
+
+.not-found__glow {
+    position: fixed;
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+.not-found__glow:first-of-type {
+    width: 700px;
+    height: 500px;
+    top: -100px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: radial-gradient(
+            ellipse at center,
+            rgba(255, 107, 53, 0.08) 0%,
+            transparent 70%
+    );
+}
+
+.not-found__glow--secondary {
+    width: 400px;
+    height: 400px;
+    bottom: -120px;
+    right: -80px;
+    background: radial-gradient(
+            ellipse at center,
+            rgba(255, 107, 53, 0.1) 0%,
+            transparent 70%
+    );
+}
+
+.not-found__content {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    max-width: 520px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.not-found__code {
+    font-family: 'DrukWideCyr-Bold', sans-serif;
+    font-size: clamp(120px, 25vw, 220px);
+    line-height: 0.85;
+    color: var(--text);
+    letter-spacing: 0.02em;
+    margin-bottom: 0.5rem;
+    position: relative;
+    user-select: none;
+    transition: color 0.1s ease;
+    display: inline-block;
+    text-align: center;
+}
+
+.not-found__code--glitch {
+    color: var(--orange);
+    animation: glitchShake 0.15s ease;
+}
+
+.not-found__code--glitch::before,
+.not-found__code--glitch::after {
+    content: attr(data-text);
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.not-found__code--glitch::before {
+    color: #ff5050;
+    animation: glitchBefore 0.15s ease;
+    clip-path: polygon(0 0, 100% 0, 100% 35%, 0 35%);
+}
+
+.not-found__code--glitch::after {
+    color: #5050ff;
+    animation: glitchAfter 0.15s ease;
+    clip-path: polygon(0 65%, 100% 65%, 100% 100%, 0 100%);
+}
+
+@keyframes glitchShake {
+    0%,
+    100% {
+        transform: translate(0);
+    }
+    20% {
+        transform: translate(-4px, 2px);
+    }
+    40% {
+        transform: translate(4px, -2px);
+    }
+    60% {
+        transform: translate(-2px, -2px);
+    }
+    80% {
+        transform: translate(2px, 2px);
+    }
+}
+
+@keyframes glitchBefore {
+    0%,
+    100% {
+        transform: translate(0);
+    }
+    50% {
+        transform: translate(-6px, 0);
+    }
+}
+
+@keyframes glitchAfter {
+    0%,
+    100% {
+        transform: translate(0);
+    }
+    50% {
+        transform: translate(6px, 0);
+    }
+}
+
+.not-found__title {
+    font-size: clamp(24px, 5vw, 36px);
+    letter-spacing: 0.08em;
+    color: var(--text);
+    margin-bottom: 1rem;
+}
+
+.not-found__reason {
+    font-size: 16px;
+    color: var(--text-2);
+    line-height: 1.6;
+    margin-bottom: 2rem;
+    font-style: italic;
+}
+
+.not-found__emojis {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    margin-bottom: 2.5rem;
+}
+
+.not-found__emoji {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+
+    width: 52px;
+    height: 52px;
+
+    animation: floatEmoji 3s ease-in-out infinite;
+}
+
+.not-found__emoji--left {
+    animation-delay: 0s;
+}
+.not-found__emoji--center {
+    animation-delay: 0.5s;
+}
+.not-found__emoji--right {
+    animation-delay: 1s;
+}
+
+@keyframes floatEmoji {
+    0%,
+    100% {
+        transform: translateY(0) rotate(0deg);
+    }
+    25% {
+        transform: translateY(-10px) rotate(-3deg);
+    }
+    75% {
+        transform: translateY(6px) rotate(3deg);
+    }
+}
+
+.not-found__btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    padding: 14px 32px;
+    background: var(--orange);
+    border: none;
+    border-radius: 100px;
+    color: #fff;
+    font-size: 15px;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    box-shadow: 0 8px 28px rgba(255, 107, 53, 0.3);
+    transition: all var(--transition);
+}
+
+.not-found__btn:hover {
+    background: var(--orange-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 12px 36px rgba(255, 107, 53, 0.4);
+}
+
+.not-found__hint {
+    font-size: 12px;
+    color: var(--text-3);
+    margin-top: 1.25rem;
+}
+
+@media (max-width: 480px) {
+    .not-found {
+        padding: 1rem;
+    }
+
+    .not-found__btn {
+        width: 100%;
+        justify-content: center;
+    }
+}

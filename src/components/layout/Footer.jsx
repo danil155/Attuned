@@ -7,9 +7,9 @@ export default function Footer() {
             <div className="footer__inner">
                 <div className="footer__logo">
                     <img src={logo} alt="Attuned" style={{ width: 36, height: 36, objectFit: 'contain' }} />
-                    <span>ATTUNED</span>
+                    <span className="footer__brand">ATTUNED</span>
                 </div>
-                <p className="footer__copy">©2026 @putka_sok · v0.1.5 beta</p>
+                <p className="footer__copy">©2026 @putka_sok · v0.1.6 beta</p>
                 <p className="footer__legal">Все права защищены.</p>
             </div>
         </footer>

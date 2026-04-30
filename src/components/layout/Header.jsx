@@ -3,6 +3,7 @@ import { NavLink } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import TokenRevealModal from "../auth/TokenRevealModal";
 import ProSubscriptionModal from "../subsciption/ProSubscriptionModal";
+import { StyleEmoji } from "../../services/StyleEmoji";
 import logo from "../../assets/AttunedLogo512.png";
 import "./Header.css";
 
@@ -111,6 +112,9 @@ export default function Header() {
                         <NavLink to="/recommendations" className={({ isActive }) => `nav-link ${isActive ? "nav-link--active" : ""}`}>
                             Рекомендации
                         </NavLink>
+                        <NavLink to="/feedback" className={({ isActive }) => `nav-link ${isActive ? "nav-link--active" : ""}`}>
+                            Обратная связь
+                        </NavLink>
                     </nav>
 
                     <div className="header__actions">
@@ -124,13 +128,21 @@ export default function Header() {
                             onClick={() => setMenuOpen((v) => !v)}
                             title="Аккаунт"
                         >
-                            <span className="avatar-emoji">{user?.avatar_emoji ?? '👤'}</span>
+                            <StyleEmoji
+                                emoji={user?.avatar_emoji}
+                                className="avatar-emoji"
+                                size="25px"
+                            />
                         </button>
 
                         {menuOpen && (
                             <div ref={menuRef} className="account-menu">
                                 <div className="account-menu__header">
-                                    <span className="account-menu__emoji">{user?.avatar_emoji ?? "👤"}</span>
+                                    <StyleEmoji
+                                        emoji={user?.avatar_emoji}
+                                        className="account-menu__emoji"
+                                        size="35px"
+                                    />
                                     <div>
                                         <p className="account-menu__plan">
                                             {user?.is_pro ? '✦ Pro подписка' : 'Free план'}
@@ -182,7 +194,7 @@ export default function Header() {
                                         disabled={regenLoading}
                                     >
                                         {regenLoading
-                                            ? <span className="btn-spinner-small" style={{ width: 14, height: 14 }} />
+                                            ? <span className="btn-spinner-small" />
                                             : <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 6v3l4-4-4-4v3c-4.42 0-8 3.58-8 8 0 1.57.46 3.03 1.24 4.26L6.7 14.8c-.45-.83-.7-1.79-.7-2.8 0-3.31 2.69-6 6-6zm6.76 1.74L17.3 9.2c.44.84.7 1.79.7 2.8 0 3.31-2.69 6-6 6v-3l-4 4 4 4v-3c4.42 0 8-3.58 8-8 0-1.57-.46-3.03-1.24-4.26z"/></svg>
                                         }
                                         Сгенерировать новый токен

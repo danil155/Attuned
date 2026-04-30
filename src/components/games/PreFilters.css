@@ -44,7 +44,6 @@
     background: none;
     border: none;
     color: var(--orange);
-    font-family: "Outfit", sans-serif;
     font-size: 12px;
     font-weight: 500;
     cursor: pointer;
@@ -146,7 +145,6 @@
     background: none;
     border: none;
     color: var(--orange);
-    font-family: "Outfit", sans-serif;
     font-size: 12px;
     cursor: pointer;
     padding: 0;
@@ -167,7 +165,6 @@
     border: 1px solid var(--border);
     border-radius: 100px;
     color: var(--text-2);
-    font-family: "Outfit", sans-serif;
     font-size: 12px;
     font-weight: 500;
     cursor: pointer;

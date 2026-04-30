@@ -27,7 +27,6 @@
     background: none;
     border: none;
     outline: none;
-    font-family: "Outfit", sans-serif;
     font-size: 15px;
     color: var(--text);
 }
@@ -85,7 +84,6 @@
     border-bottom: 1px solid var(--border);
     cursor: pointer;
     text-align: left;
-    font-family: "Outfit", sans-serif;
     transition: background var(--transition);
 }
 .sd-item:last-child { border-bottom: none; }
@@ -129,4 +127,7 @@
     color: var(--text-3);
 }
 
-.sd-arrow { color: var(--text-3); flex-shrink: 0; }
+.sd-arrow {
+    color: var(--text-3);
+    flex-shrink: 0;
+}

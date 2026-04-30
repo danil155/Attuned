@@ -18,7 +18,7 @@ export const STARTER_PACKS = [
     {
         id: "pack-rpg",
         name: "Любитель RPG",
-        emoji: "⚔️",
+        emoji: "🐉",
         description: "Глубокие миры, прокачка и выборы",
         gameIds: [1942, 119171, 1877, 119133, 1887],
     },

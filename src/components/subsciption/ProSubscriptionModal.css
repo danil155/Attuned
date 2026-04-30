@@ -22,10 +22,6 @@
     transition: transform 0.1s ease;
 }
 
-.pro-modal:active {
-    transform: scale(0.98);
-}
-
 .modal-close {
     position: absolute;
     top: 20px;
@@ -51,8 +47,8 @@
 }
 
 .pro-modal__title {
-    font-family: 'DrukWideCyr-Bold', 'Bebas Neue', sans-serif;
-    font-size: 28px;
+    font-family: 'Akony-Bold', sans-serif;
+    font-size: 24px;
     font-weight: 700;
     text-align: center;
     letter-spacing: 0.02em;

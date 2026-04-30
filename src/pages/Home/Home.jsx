@@ -4,6 +4,7 @@ import { SearchDropdown, PreFilters } from "../../components/games";
 import { DEFAULT_PRE_FILTERS } from "../../components/games/PreFilters";
 import { getRecommendations, getPopularGames, searchGamesByIds } from "../../api";
 import { STARTER_PACKS } from "../../context/AppContext";
+import { StyleEmoji } from "../../services/StyleEmoji";
 import "./Home.css";
 
 const QUICK_LIMIT = 10;
@@ -193,10 +194,6 @@ export default function Home() {
                     </button>
                 </div>
 
-                <div className="hero__actions">
-
-                </div>
-
                 <div className={`filters-wrapper ${showFilters ? "filters-wrapper--open" : ""}`}>
                     <div className="filters-inner">
                         <PreFilters filters={preFilters} onChange={setPreFilters} />
@@ -216,7 +213,13 @@ export default function Home() {
                                     onClick={() => addStarterPack(pack)}
                                     disabled={loading}
                             >
-                                <span className="pack-card__emoji">{pack.emoji}</span>
+                                <div className="pack-card__emoji-wrapper">
+                                    <StyleEmoji
+                                        emoji={pack.emoji}
+                                        className="pack-card__emoji"
+                                        size="30px"
+                                    />
+                                </div>
                                 <span className="pack-card__name">{pack.name}</span>
                                 <span className="pack-card__desc">{pack.description}</span>
                                 <span className="pack-card__count">{pack.gameIds.length} игр</span>

@@ -26,8 +26,8 @@
 }
 
 .header__brand {
-    font-family: "Bebas Neue", sans-serif;
-    font-size: 22px;
+    font-family: "Akony-Bold", sans-serif;
+    font-size: 12px;
     letter-spacing: 0.12em;
     color: var(--text);
 }
@@ -81,7 +81,6 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: border-color var(--transition), box-shadow var(--transition), transform var(--transition);
 }
 
 .avatar-btn:hover {
@@ -95,10 +94,10 @@
     box-shadow: 0 0 0 2px var(--orange-dim);
 }
 
-.avatar-emoji {
-    font-size: 20px;
-    line-height: 1;
-    user-select: none;
+.avatar-emoji img.twemoji-img {
+    width: 20px;
+    height: 20px;
+    vertical-align: middle;
 }
 
 .account-menu {
@@ -133,23 +132,10 @@
     flex-shrink: 0;
 }
 
-.account-menu__id {
-    font-size: 12px;
-    font-family: "Courier New", monospace;
-    color: var(--text-3);
-    margin-top: 4px;
-    word-break: break-all;
-    max-width: 200px;
-}
-
 .account-menu__plan {
     font-size: 13px;
     font-weight: 500;
     color: var(--text);
-}
-
-.account-menu__plan--pro {
-    color: var(--orange);
 }
 
 .account-menu__divider {
@@ -193,21 +179,10 @@
     cursor: default;
 }
 
-.token-row__btn {
-    background: none;
-    border: none;
-    cursor: pointer;
-    color: var(--text-3);
-    display: flex;
-    align-items: center;
-    padding: 2px;
-    border-radius: 3px;
-    flex-shrink: 0;
-    transition: color var(--transition);
+.btn-spinner-small {
+    width: 14px;
+    height: 14px;
 }
-
-.token-row__btn:hover { color: var(--text); }
-.token-row__btn--done { color: #4caf50 !important; }
 
 .account-menu__actions {
     padding: 8px;
@@ -226,7 +201,6 @@
     border: none;
     border-radius: var(--radius-sm);
     color: var(--text-2);
-    font-family: "Outfit", sans-serif;
     font-size: 13px;
     font-weight: 500;
     cursor: pointer;

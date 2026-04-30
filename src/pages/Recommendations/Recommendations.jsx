@@ -160,7 +160,7 @@ export default function Recommendations() {
                     <>
                         <div className="recs-controls">
                             <h1 className="recs-title">
-                                {filtered.length} <span>рекомендаций</span>
+                                <span>{filtered.length} рекомендаций</span>
                             </h1>
                             <div className="recs-controls__right">
                                 <RecsFilters

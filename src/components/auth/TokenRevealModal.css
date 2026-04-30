@@ -92,7 +92,6 @@
 }
 
 .tm-title {
-    font-family: "Bebas Neue", sans-serif;
     font-size: 30px;
     letter-spacing: 0.05em;
     color: var(--text);
@@ -139,7 +138,6 @@
     border: 1px solid var(--border-md);
     border-radius: var(--radius-sm);
     color: var(--text-2);
-    font-family: "Outfit", sans-serif;
     font-size: 12px;
     font-weight: 500;
     cursor: pointer;
@@ -205,7 +203,6 @@
     border: none;
     border-radius: var(--radius-xl);
     color: #fff;
-    font-family: "Outfit", sans-serif;
     font-size: 15px;
     font-weight: 600;
     cursor: pointer;

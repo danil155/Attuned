@@ -1,4 +1,26 @@
-@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;500;600&display=swap');
+@font-face {
+  font-family: 'DrukWideCyr-Bold';
+  src: url('../public/fonts/drukwidecyr-bold.woff2') format('woff2'), url('../public/fonts/drukwidecyr-bold.woff') format('woff');
+  font-weight: bold;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'NTSomic';
+  src: url('../public/fonts/ntsomic-regular.woff2') format('woff2'), url('../public/fonts/ntsomic-regular.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Akony-Bold';
+  src: url('../public/fonts/akony-bold.woff2') format('woff2'), url('../public/fonts/akony-bold.woff') format('woff');
+  font-weight: bold;
+  font-style: normal;
+  font-display: swap;
+}
 
 *, *::before, *::after {
   box-sizing: border-box;
@@ -25,20 +47,12 @@
   --transition: 200ms cubic-bezier(0.4,0,0.2,1);
 }
 
-@font-face {
-  font-family: 'DrukWideCyr-Bold';
-  src: url('../public/fonts/drukwidecyr-bold.woff2') format('woff2'), url('../public/fonts/drukwidecyr-bold.woff') format('woff');
-  font-weight: bold;
-  font-style: normal;
-  font-display: swap;
-}
-
 html {
   scroll-behavior: smooth;
 }
 
 body {
-  font-family: 'Outfit', sans-serif;
+  font-family: 'NTSomic', sans-serif;
   background: var(--bg);
   color: var(--text);
   min-height: 100vh;

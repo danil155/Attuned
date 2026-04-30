@@ -7,11 +7,12 @@ import { SearchDropdown, PreFilters } from "../../components/games";
 import { DEFAULT_PRE_FILTERS } from "../../components/games/PreFilters";
 import { getRecommendations, searchGamesByIds, importSteamLibrary } from "../../api";
 import wsService from "../../services/wsService";
+import { StyleEmoji } from "../../services/StyleEmoji";
 import "./Collections.css";
 
 const VIRTUAL_META = {
-    [LIKES_BASKET_ID]: { emoji: "❤️",  color: "#ff6b6b", label: "Добавляются автоматически при нажатии «Нравится»" },
-    [DISLIKES_BASKET_ID]: { emoji: "🚫",  color: "#9a9590", label: "Добавляются автоматически при нажатии «Не интересно»" },
+    [LIKES_BASKET_ID]: { emoji: "🧡",  color: "#ff6b6b", label: 'Добавляются автоматически при нажатии "Нравится"' },
+    [DISLIKES_BASKET_ID]: { emoji: "💔",  color: "#9a9590", label: 'Добавляются автоматически при нажатии "Не интересно"' },
 }
 
 export default function Collections() {
@@ -262,7 +263,11 @@ export default function Collections() {
                                 >
                                     <div className="basket-tab__info">
                                         <span className="basket-tab__name">
-                                            <span className="basket-tab__emoji">{meta.emoji}</span>
+                                            <StyleEmoji
+                                                emoji={meta.emoji}
+                                                className="basket-tab__emoji"
+                                                size="16px"
+                                            />
                                             {b.name}
                                         </span>
                                         <span className="basket-tab__count">{b.games.length}</span>
@@ -419,9 +424,11 @@ export default function Collections() {
                                     <div>
                                         <div className="basket-title-row">
                                             {isVirtual && (
-                                                <span className="basket-title-emoji">
-                                                    {virtualMeta.emoji}
-                                                </span>
+                                                <StyleEmoji
+                                                    emoji={virtualMeta.emoji}
+                                                    className="basket-tab__emoji"
+                                                    size="35px"
+                                                />
                                             )}
                                             <h1 className="basket-title">{activeBasket.name}</h1>
                                             {isVirtual && (
@@ -642,7 +649,13 @@ export default function Collections() {
                                     </div>
                                 ) : isVirtual ? (
                                     <div className="empty-state">
-                                        <span className="empty-state__big-emoji">{virtualMeta.emoji}</span>
+                                        <div className="empty-state__big-emoji-wrapper">
+                                            <StyleEmoji
+                                                emoji={virtualMeta.emoji}
+                                                className="empty-state__big-emoji"
+                                                size="60px"
+                                            />
+                                        </div>
                                         <p className="empty-state__title">Пока пусто</p>
                                         <p className="empty-state__sub">{virtualMeta.label}</p>
                                     </div>
@@ -671,7 +684,10 @@ export default function Collections() {
                                                         }
                                                     }}
                                                 >
-                                                    <span>{pack.emoji}</span>
+                                                    <StyleEmoji
+                                                        emoji={pack.emoji}
+                                                        size="14px"
+                                                    />
                                                     <span>{pack.name}</span>
                                                 </button>
                                             ))}

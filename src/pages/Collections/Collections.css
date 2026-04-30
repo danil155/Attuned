@@ -25,7 +25,6 @@
 }
 
 .sidebar__title {
-    font-family: "Bebas Neue", sans-serif;
     font-size: 20px;
     letter-spacing: 0.06em;
     color: var(--text);
@@ -48,46 +47,6 @@
     border-color: rgba(255, 107, 53, 0.35);
 }
 
-.basket-content {
-    will-change: opacity, transform;
-}
-
-.basket-content--enter {
-    animation: basketEnter 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1) forwards;
-}
-
-.basket-content--exit {
-    animation: basketExit 0.25s cubic-bezier(0.4, 0, 0.6, 1) forwards;
-}
-
-@keyframes basketEnter {
-    0% {
-        opacity: 0;
-        transform: translateY(12px);
-    }
-    100% {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-@keyframes basketExit {
-    0% {
-        opacity: 1;
-        transform: translateY(0);
-    }
-    100% {
-        opacity: 0;
-        transform: translateY(-8px);
-    }
-}
-
-.basket-games {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
-
 .basket-list {
     display: flex;
     flex-direction: column;
@@ -106,7 +65,6 @@
     border: 1px solid transparent;
     border-radius: var(--radius-md);
     cursor: pointer;
-    font-family: "Outfit", sans-serif;
     text-align: left;
     transition: all var(--transition);
 }
@@ -161,7 +119,6 @@
     border: none;
     border-bottom: 1px solid var(--orange);
     outline: none;
-    font-family: "Outfit", sans-serif;
     font-size: 14px;
     color: var(--text);
     width: 100%;
@@ -218,7 +175,6 @@
     border: none;
     border-bottom: 1px solid var(--orange);
     outline: none;
-    font-family: "Outfit", sans-serif;
     font-size: 14px;
     color: var(--text);
     padding: 4px 0;
@@ -239,7 +195,6 @@
     border: 1px solid var(--border-md);
     border-radius: var(--radius-sm);
     color: var(--text-2);
-    font-family: "Outfit", sans-serif;
     font-size: 12px;
     font-weight: 500;
     cursor: pointer;
@@ -273,7 +228,6 @@
     border: 1px dashed var(--border-md);
     border-radius: var(--radius-md);
     color: var(--text-3);
-    font-family: "Outfit", sans-serif;
     font-size: 13px;
     cursor: pointer;
     transition: all var(--transition);
@@ -298,8 +252,6 @@
     color: var(--orange);
 }
 
-.profile__main {}
-
 .basket-header {
     display: flex;
     align-items: flex-start;
@@ -311,7 +263,6 @@
 }
 
 .basket-title {
-    font-family: "Bebas Neue", sans-serif;
     margin: 0;
     white-space: nowrap;
     overflow: hidden;
@@ -333,7 +284,6 @@
     border: 1px solid var(--border-md);
     border-radius: 100px;
     color: var(--text-2);
-    font-family: inherit;
     font-size: 14px;
     font-weight: 500;
     cursor: pointer;
@@ -388,7 +338,6 @@
     border: none;
     border-radius: 100px;
     color: #fff;
-    font-family: "Outfit", sans-serif;
     font-size: 14px;
     font-weight: 600;
     cursor: pointer;
@@ -568,6 +517,15 @@
     margin-bottom: 0.75rem;
 }
 
+.empty-state__big-emoji-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 8px;
+    min-height: 30px;
+}
+
+
 @keyframes slideDown {
     from { opacity: 0; transform: translateY(-10px); }
     to { opacity: 1; transform: translateY(0); }
@@ -585,7 +543,6 @@
 }
 
 .empty-state__title {
-    font-family: "Bebas Neue", sans-serif;
     font-size: 24px;
     letter-spacing: 0.06em;
     color: var(--text-2);
@@ -614,7 +571,6 @@
     border: 1px solid var(--border-md);
     border-radius: 100px;
     color: var(--text);
-    font-family: "Outfit", sans-serif;
     font-size: 13px;
     font-weight: 500;
     cursor: pointer;
@@ -642,7 +598,6 @@
     border: 1px solid #66c0f4;
     border-radius: var(--radius-md);
     color: #66c0f4;
-    font-family: "Outfit", sans-serif;
     font-size: 14px;
     font-weight: 600;
     cursor: pointer;
@@ -711,7 +666,6 @@
 }
 
 .steam-import-header h3 {
-    font-family: "Bebas Neue", sans-serif;
     font-size: 20px;
     letter-spacing: 0.06em;
     color: var(--text);
@@ -758,7 +712,6 @@
     border: 1px solid var(--border-md);
     border-radius: var(--radius-md);
     color: var(--text);
-    font-family: "Outfit", sans-serif;
     font-size: 14px;
     transition: all var(--transition);
 }
@@ -782,7 +735,6 @@
     border: none;
     border-radius: var(--radius-md);
     color: white;
-    font-family: "Outfit", sans-serif;
     font-size: 14px;
     font-weight: 600;
     cursor: pointer;
@@ -1061,7 +1013,6 @@
     border-radius: 100px;
     font-size: 0.85rem;
     font-weight: 500;
-    font-family: "Outfit", sans-serif;
     cursor: pointer;
     transition: all 0.2s ease;
     border: none;
