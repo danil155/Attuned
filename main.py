@@ -8,7 +8,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from config import load_db_config, load_igdb_config, settings
-from api import games, recommendations, genres, auth, interactions, steam, subscription
+from api import games, recommendations, genres, auth, interactions, steam, subscription, send_email
 from db_service import Database, run_migrations
 from payment_db import PaymentDatabase
 from igdb_service import IGDBClient
@@ -151,6 +151,7 @@ def create_app() -> FastAPI:
     app.include_router(auth.router, prefix='/api/v1')
     app.include_router(steam.router, prefix='/api/v1')
     app.include_router(subscription.router, prefix='/api/v1')
+    app.include_router(send_email.router, prefix='/api/v1')
     app.include_router(interactions.router, prefix='/ws')
 
     return app

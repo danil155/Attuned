@@ -97,6 +97,13 @@ class Settings(BaseSettings):
 
     SIMILARITY_THRESHOLD: float = Field(0.4, alias='SIMILARITY_THRESHOLD')
 
+    # Yandex Parameters
+    YANDEX_APPLICATION_PASSWORD: str = Field(..., alias='YANDEX_APPLICATION_PASSWORD')
+    SMTP_HOST: str = Field('smtp.yandex.ru', alias='HOST')
+    SMTP_PORT: int = Field(587, alias='SMTP_PORT')
+    SMTP_USER: str = Field(..., alias='SMTP_USER')
+    TO_EMAIL: str = Field(..., alias='TO_EMAIL')
+
     @property
     def allowed_game_types_tuple(self) -> tuple[int, ...]:
         return tuple(int(x.strip()) for x in self.ALLOWED_GAME_TYPES.split(','))
