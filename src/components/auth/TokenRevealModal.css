@@ -221,3 +221,198 @@
     cursor: not-allowed;
     box-shadow: none;
 }
+
+@media (min-width: 768px) and (max-width: 992px) {
+    .token-modal {
+        padding: 2rem 2rem 1.75rem;
+    }
+
+    .tm-title {
+        font-size: 26px;
+    }
+
+    .tm-desc {
+        font-size: 14px;
+        margin-bottom: 1.25rem;
+    }
+
+    .tm-token {
+        font-size: 12px;
+    }
+
+    .tm-copy {
+        padding: 5px 10px;
+        font-size: 11px;
+    }
+}
+
+@media (max-width: 768px) {
+    .token-overlay {
+        padding: 0.75rem;
+    }
+
+    .token-modal-container {
+        max-width: 420px;
+    }
+
+    .token-modal {
+        padding: 1.5rem 1.25rem 1.25rem;
+        border-radius: var(--radius-lg);
+    }
+
+    .tm-icon {
+        font-size: 32px;
+        margin-bottom: 0.75rem;
+    }
+
+    .tm-title {
+        font-size: 24px;
+        margin-bottom: 0.5rem;
+    }
+
+    .tm-desc {
+        font-size: 13px;
+        line-height: 1.55;
+        margin-bottom: 1.25rem;
+    }
+
+    .tm-token-wrap {
+        padding: 10px 12px;
+        margin-bottom: 1rem;
+        gap: 8px;
+    }
+
+    .tm-token {
+        font-size: 11px;
+        word-break: break-all;
+    }
+
+    .tm-copy {
+        padding: 5px 10px;
+        font-size: 11px;
+    }
+
+    .tm-copy svg {
+        width: 12px;
+        height: 12px;
+    }
+
+    .tm-warning {
+        padding: 10px 12px;
+        margin-bottom: 1.25rem;
+        gap: 8px;
+    }
+
+    .tm-warning svg {
+        width: 14px;
+        height: 14px;
+    }
+
+    .tm-warning p {
+        font-size: 12px;
+    }
+
+    .tm-confirm {
+        font-size: 13px;
+        margin-bottom: 1.25rem;
+        gap: 8px;
+    }
+
+    .tm-confirm input[type="checkbox"] {
+        width: 16px;
+        height: 16px;
+    }
+
+    .tm-btn {
+        padding: 12px;
+        font-size: 14px;
+    }
+}
+
+@media (max-width: 480px) {
+    .token-overlay {
+        padding: 0.5rem;
+    }
+
+    .token-modal-container {
+        max-width: none;
+        width: 100%;
+    }
+
+    .token-modal {
+        padding: 1.25rem 1rem 1rem;
+        border-radius: var(--radius-md) var(--radius-md) var(--radius-lg) var(--radius-lg);
+    }
+
+    .tm-icon {
+        font-size: 28px;
+        margin-bottom: 0.5rem;
+    }
+
+    .tm-title {
+        font-size: 20px;
+    }
+
+    .tm-desc {
+        font-size: 12px;
+        margin-bottom: 1rem;
+    }
+
+    .tm-token-wrap {
+        padding: 8px 10px;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .tm-token {
+        font-size: 10px;
+        text-align: center;
+        width: 100%;
+        word-break: break-all;
+    }
+
+    .tm-copy {
+        padding: 4px 12px;
+        font-size: 10px;
+    }
+
+    .tm-warning {
+        padding: 8px 10px;
+        gap: 6px;
+    }
+
+    .tm-warning p {
+        font-size: 11px;
+    }
+
+    .tm-confirm {
+        font-size: 12px;
+        margin-bottom: 1rem;
+    }
+
+    .tm-btn {
+        padding: 10px;
+        font-size: 13px;
+        border-radius: var(--radius-md);
+    }
+}
+
+@media (hover: none) and (pointer: coarse) {
+    .tm-btn,
+    .tm-copy,
+    .tm-confirm {
+        min-height: 44px;
+    }
+
+    .tm-confirm {
+        display: flex;
+        align-items: center;
+    }
+}
+
+@media (max-width: 768px) {
+    .token-overlay::before,
+    .token-overlay::after {
+        display: none;
+    }
+}

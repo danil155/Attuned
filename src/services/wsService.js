@@ -6,17 +6,15 @@ const MAX_RECONNECT = 5;
 class WsService {
     constructor() {
         this._ws = null;
-        this._token = null;
         this._listeners = new Map();
         this._reconnects = 0;
         this._intentional = false;
     }
 
-    connect(token) {
+    connect() {
         if (this._ws && this._ws.readyState === WebSocket.OPEN)
             return;
 
-        this._token = token;
         this._intentional = false;
         this._open();
     }
@@ -27,18 +25,16 @@ class WsService {
         this._ws = null;
     }
 
-    _open() {
+    async _open() {
         this._ws = new WebSocket(WS_URL);
 
-        this._ws.onopen = () => {
+        this._ws.onopen = async () => {
             this._reconnects = 0;
-            this._send({ token: this._token });
         };
 
         this._ws.onmessage = (e) => {
             try {
                 const msg = JSON.parse(e.data);
-
                 this._emit(msg.type, msg);
             } catch  { }
         };

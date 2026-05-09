@@ -1,9 +1,8 @@
-import {useState} from "react";
+import { useState } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { useLocation } from "react-router-dom";
-import { AuthProvider, useAuth } from "./context/AuthContext";
-import { AppProvider, GenresProvider } from "./context/AppContext";
+import { AuthProvider, useAuth, AppProvider, GenresProvider, ErrorProvider } from "./context";
 import Header from "./components/layout/Header";
 import Footer from "./components/layout/Footer";
 import WelcomeModal from "./components/auth/WelcomeModal";
@@ -186,47 +185,49 @@ function ProtectedRoutes() {
 }
 
 function AppShell() {
-  const { isAuthed, authLoading } = useAuth();
-  const location = useLocation();
+    const { isAuthed, authLoading } = useAuth();
+    const location = useLocation();
 
-  const [legalAccepted, setLegalAccepted] = useState(
-      () => localStorage.getItem('attuned_legal_accepted') === 'true'
-  );
-
-  if (authLoading) {
-    return (
-        <div className="app-loading">
-          <div className="app-loading__spinner" />
-        </div>
+    const [legalAccepted, setLegalAccepted] = useState(
+        () => localStorage.getItem('attuned_legal_accepted') === 'true'
     );
-  }
 
-  if (!isAuthed) {
-    return <WelcomeModal />
-  }
+    if (authLoading) {
+        return (
+            <div className="app-loading">
+                <div className="app-loading__spinner" />
+            </div>
+        );
+    }
 
-  if (!legalAccepted) {
-      if (location.pathname === '/privacy' || location.pathname === '/terms') {
-          return <LegalRoutes />;
-      }
+    if (!isAuthed) {
+        return <WelcomeModal />
+    }
 
-      return (
-          <>
-              <LegalConsentModal onAccept={() => setLegalAccepted(true)} />
-              <LegalRoutes />
-          </>
-      );
-  }
+    if (!legalAccepted) {
+        if (location.pathname === '/privacy' || location.pathname === '/terms') {
+            return <LegalRoutes />;
+        }
 
-  return <ProtectedRoutes />;
+        return (
+            <>
+                <LegalConsentModal onAccept={() => setLegalAccepted(true)} />
+                <LegalRoutes />
+            </>
+        );
+    }
+
+    return <ProtectedRoutes />;
 }
 
 export default function App() {
-  return (
-      <AuthProvider>
-          <BrowserRouter>
-              <AppShell />
-          </BrowserRouter>
-      </AuthProvider>
-  );
+    return (
+        <AuthProvider>
+            <ErrorProvider>
+                <BrowserRouter>
+                    <AppShell />
+                </BrowserRouter>
+            </ErrorProvider>
+        </AuthProvider>
+    );
 }

@@ -4,13 +4,17 @@ import { SearchDropdown, PreFilters } from "../../components/games";
 import { DEFAULT_PRE_FILTERS } from "../../components/games/PreFilters";
 import { getRecommendations, getPopularGames, searchGamesByIds } from "../../api";
 import { STARTER_PACKS } from "../../context/AppContext";
+import { useError } from "../../context";
 import { StyleEmoji } from "../../services/StyleEmoji";
 import "./Home.css";
 
-const QUICK_LIMIT = 10;
+const MIN_GAMES = 3;
+const MAX_GAMES = 10;
 
 export default function Home() {
     const navigate = useNavigate();
+
+    const { showError } = useError();
 
     const [selected, setSelected] = useState([]);
     const [count, setCount] = useState(8);
@@ -20,6 +24,7 @@ export default function Home() {
     const [showFilters, setShowFilters] = useState(false);
 
     const hasActiveFilters = preFilters.platforms.length > 0 || preFilters.releasedOnly !== DEFAULT_PRE_FILTERS.releasedOnly;
+    const isValidSelection = selected.length >= MIN_GAMES && selected.length <= MAX_GAMES;
 
     useEffect(() => {
         getPopularGames(10)
@@ -29,6 +34,7 @@ export default function Home() {
             })
             .catch(error => {
                 console.error('Failed to load popular games:', error);
+                showError('Не удалось загрузить популярные игры');
             });
     }, []);
 
@@ -39,7 +45,7 @@ export default function Home() {
     }, [selected.length])
 
     const addGame = (game) => {
-        if (selected.length >= QUICK_LIMIT)
+        if (selected.length >= MAX_GAMES)
             return;
         if (selected.find((g) => g.igdb_id === game.igdb_id))
             return;
@@ -58,25 +64,34 @@ export default function Home() {
             const packGames = result?.items ?? result ?? [];
             const existing = new Set(selected.map((g) => g.igdb_id));
             const toAdd = packGames.filter((g) => !existing.has(g.igdb_id));
-            setSelected((prev) => [...prev, ...toAdd].slice(0, QUICK_LIMIT));
+            setSelected((prev) => [...prev, ...toAdd].slice(0, MAX_GAMES));
         } catch (error) {
             console.error(error);
+            showError('Не удалось загрузить стартовый набор игр')
         } finally {
             setLoading(false);
         }
     };
 
     const handleGenerate = async () => {
+        if (!isValidSelection) {
+            if (selected.length < MIN_GAMES) {
+                showError(`Выберите минимум ${MIN_GAMES} игры для получения рекомендаций`)
+            }
+            return;
+        }
+
         if (!selected.length)
             return;
 
         setLoading(true);
         try {
-            const liked_ids = selected.map(g => g.igdb_id);
+            const preferences = selected.map(g => g.igdb_id);
 
             const recs = await getRecommendations({
-                liked_igdb_ids: liked_ids,
+                preferences: preferences,
                 limit: count,
+                niche: preFilters.niche,
                 platforms: preFilters.platforms,
                 only_released: preFilters.releasedOnly
             });
@@ -84,11 +99,11 @@ export default function Home() {
             sessionStorage.setItem('attuned_recs', JSON.stringify(recs));
             sessionStorage.setItem('attuned_source', JSON.stringify(selected.map((g) => g.name)));
             sessionStorage.setItem('attuned_source_type', 'games');
-            sessionStorage.setItem('attuned_source_ids', JSON.stringify(liked_ids));
+            sessionStorage.setItem('attuned_source_ids', JSON.stringify(preferences));
             navigate("/recommendations")
         } catch (error) {
             console.error('Error when receiving recommendations: ', error)
-            alert('Не удалось получить рекомендации. Попробуйте позже.')
+            showError('Не удалось получить рекомендации. Попробуйте позже.')
         } finally {
             setLoading(false);
         }
@@ -111,7 +126,7 @@ export default function Home() {
                     ИГРУ
                 </h1>
                 <p className="hero__sub">
-                    Выбери до {QUICK_LIMIT} любимых игр - и мы построим персональную подборку,
+                    Выбери от {MIN_GAMES} до {MAX_GAMES} любимых игр - и мы построим персональную подборку,
                     которая тебя не разочарует.
                 </p>
 
@@ -122,7 +137,7 @@ export default function Home() {
                             excludeIds={selected.map((g) => g.igdb_id)}
                             onSelect={addGame}
                             placeholder="Начни вводить название игры…"
-                            disabled={selected.length >= QUICK_LIMIT}
+                            disabled={selected.length >= MAX_GAMES}
                         />
                     </div>
 
@@ -141,7 +156,12 @@ export default function Home() {
                 {selected.length > 0 && (
                     <div className="chips-wrap">
                         <p className="chips-label">
-                            Выбрано <strong>{selected.length}</strong> из {QUICK_LIMIT}
+                            Выбрано <strong>{selected.length}</strong> из {MAX_GAMES}
+                            {selected.length < MIN_GAMES && selected.length > 0 && (
+                                <span>
+                                    <br />(нужно минимум <strong>{MIN_GAMES}</strong>)
+                                </span>
+                            )}
                         </p>
                         <div className="chips-list">
                             {selected.map((g) => (
@@ -188,7 +208,7 @@ export default function Home() {
                     <button
                         className={`btn-generate ${(!selected.length || loading) ? "btn-generate--disabled" : ""}`}
                         onClick={handleGenerate}
-                        disabled={!selected.length || loading}
+                        disabled={!isValidSelection || loading}
                     >
                         {loading ? "Загрузка..." : "Найти игры"}
                     </button>

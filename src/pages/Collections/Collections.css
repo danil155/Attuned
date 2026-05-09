@@ -1057,10 +1057,367 @@
     }
 }
 
-@media (max-width: 900px) {
+.steam-import-success-notification {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 16px;
+    background: linear-gradient(135deg, rgba(46, 125, 50, 0.12) 0%, rgba(27, 94, 32, 0.08) 100%);
+    border-left: 4px solid #4caf50;
+    border-radius: var(--radius-md);
+    margin-bottom: 1rem;
+    animation: slideDown 0.4s ease-out;
+}
+
+@media (min-width: 768px) and (max-width: 992px) {
+    .profile {
+        grid-template-columns: 260px 1fr;
+        gap: 1.5rem;
+        padding: 2rem 1.5rem 4rem;
+    }
+
+    .basket-title {
+        font-size: 30px;
+        max-width: 350px;
+    }
+
+    .basket-header {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .basket-header__actions {
+        width: 100%;
+        justify-content: flex-start;
+    }
+
+    .btn-generate-basket {
+        white-space: nowrap;
+    }
+}
+
+@media (max-width: 768px) {
     .profile {
         grid-template-columns: 1fr;
-        padding: 2rem 1rem 4rem;
+        gap: 1.5rem;
+        padding: 1.5rem 1rem 3rem;
     }
-    .profile__sidebar { position: static; }
+
+    .profile__sidebar {
+        position: static;
+        top: auto;
+        padding: 1rem;
+    }
+
+    .sidebar__head {
+        margin-bottom: 0.75rem;
+    }
+
+    .sidebar__title {
+        font-size: 18px;
+    }
+
+    .basket-list {
+        margin-bottom: 0.75rem;
+    }
+
+    .basket-tab {
+        padding: 8px 10px;
+    }
+
+    .basket-tab__name {
+        font-size: 13px;
+    }
+
+    .basket-tab__count {
+        font-size: 10px;
+    }
+
+    .basket-tab__actions {
+        opacity: 1;
+    }
+
+    .basket-group-label {
+        font-size: 9px;
+        margin-bottom: 6px;
+    }
+
+    .btn-add-basket {
+        padding: 8px 10px;
+        font-size: 12px;
+    }
+
+    .new-basket-form {
+        padding: 8px;
+    }
+
+    .new-basket-input {
+        font-size: 13px;
+    }
+
+    .basket-header {
+        flex-direction: column;
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .basket-title-row {
+        flex-wrap: wrap;
+    }
+
+    .basket-title {
+        font-size: 28px;
+        max-width: 100%;
+        white-space: normal;
+        word-break: break-word;
+    }
+
+    .basket-title-emoji {
+        font-size: 32px;
+    }
+
+    .basket-subtitle {
+        font-size: 12px;
+    }
+
+    .basket-header__actions {
+        width: 100%;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .btn-toggle-filters {
+        width: 100%;
+        justify-content: center;
+        height: 42px;
+    }
+
+    .btn-generate-basket {
+        width: 100%;
+        justify-content: center;
+        height: 42px;
+        font-size: 14px;
+    }
+
+    .basket-prefilters {
+        padding: 1rem;
+    }
+
+    .basket-search {
+        margin-bottom: 1rem;
+    }
+
+    .btn-steam-import {
+        padding: 10px 12px;
+        font-size: 14px;
+    }
+
+    .btn-beta-badge-steam {
+        font-size: 8px;
+        padding: 1px 6px;
+    }
+
+    .steam-import-success-notification {
+        padding: 10px 12px;
+        margin-bottom: 1rem;
+    }
+
+    .steam-import-success-notification strong {
+        font-size: 13px;
+    }
+
+    .steam-import-success-notification p {
+        font-size: 11px;
+    }
+
+    .basket-games {
+        gap: 6px;
+    }
+
+    .basket-row {
+        padding: 8px 10px;
+        gap: 10px;
+    }
+
+    .basket-row__cover {
+        width: 32px;
+        height: 42px;
+    }
+
+    .basket-row__title {
+        font-size: 13px;
+    }
+
+    .basket-row__meta {
+        font-size: 10px;
+    }
+
+    .icon-btn {
+        width: 28px;
+        height: 28px;
+        flex-shrink: 0;
+    }
+
+    .empty-state {
+        padding: 2rem 0;
+    }
+
+    .empty-state__title {
+        font-size: 20px;
+    }
+
+    .empty-state__sub {
+        font-size: 12px;
+    }
+
+    .packs-grid {
+        gap: 8px;
+    }
+
+    .pack-pill {
+        padding: 6px 12px;
+        font-size: 12px;
+    }
+
+    .popconfirm {
+        width: 85%;
+        max-width: 300px;
+        padding: 1.25rem;
+        margin: 0 1rem;
+    }
+
+    .popconfirm__text {
+        font-size: 14px;
+    }
+
+    .popconfirm__sub {
+        font-size: 11px;
+    }
+
+    .popconfirm__btn {
+        padding: 6px 16px;
+        font-size: 13px;
+    }
+}
+
+@media (max-width: 480px) {
+    .profile {
+        padding: 1rem 0.75rem 2rem;
+        gap: 1rem;
+    }
+
+    .profile__sidebar {
+        padding: 0.75rem;
+        border-radius: var(--radius-md);
+    }
+
+    .sidebar__title {
+        font-size: 16px;
+    }
+
+    .plan-badge {
+        font-size: 9px;
+        padding: 2px 8px;
+    }
+
+    .basket-tab {
+        padding: 6px 8px;
+    }
+
+    .basket-tab__name {
+        font-size: 12px;
+    }
+
+    .basket-title {
+        font-size: 24px;
+    }
+
+    .basket-title-emoji {
+        font-size: 28px;
+    }
+
+    .basket-readonly-badge {
+        font-size: 9px;
+        padding: 2px 6px;
+    }
+
+    .btn-generate-basket,
+    .btn-toggle-filters {
+        height: 38px;
+        font-size: 12px;
+    }
+
+    .basket-row__cover {
+        width: 28px;
+        height: 38px;
+    }
+
+    .basket-row__title {
+        font-size: 12px;
+    }
+
+    .basket-row__meta {
+        font-size: 9px;
+    }
+
+    .icon-btn {
+        width: 26px;
+        height: 26px;
+    }
+
+    .packs-grid {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .pack-pill {
+        justify-content: center;
+    }
+
+    .steam-import-panel {
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .steam-import-header h3 {
+        font-size: 16px;
+    }
+
+    .steam-import-form {
+        flex-direction: column;
+    }
+
+    .steam-import-input {
+        width: 100%;
+    }
+
+    .btn-steam-import-submit {
+        justify-content: center;
+        padding: 10px;
+    }
+
+    .steam-import-description {
+        font-size: 11px;
+    }
+}
+
+@media (max-width: 768px) {
+    .profile__sidebar {
+        max-height: none;
+        overflow-y: visible;
+    }
+
+    .basket-tab__actions .icon-btn,
+    .icon-btn {
+        min-width: 32px;
+        min-height: 32px;
+    }
+
+    .basket-tab:hover .basket-tab__actions {
+        opacity: 1;
+    }
+
+    .btn-add-basket {
+        justify-content: center;
+    }
 }

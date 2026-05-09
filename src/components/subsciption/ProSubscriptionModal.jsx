@@ -2,13 +2,10 @@ import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { activatePromoCode } from "../../api";
-import { useAuth } from "../../context/AuthContext";
 import "./ProSubscriptionModal.css";
 
 export default function ProSubscriptionModal({ isOpen, onClose, onSuccess }) {
-    const { token } = useAuth();
-
-    const [promoCode, setPromoCode] = useState("");
+    const [promoCode, setPromoCode] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(false);
@@ -59,7 +56,7 @@ export default function ProSubscriptionModal({ isOpen, onClose, onSuccess }) {
         setError(null);
 
         try {
-            const result = await activatePromoCode(token, promoCode.trim().toUpperCase());
+            const result = await activatePromoCode(promoCode.trim());
 
             if (result.success) {
                 setSuccess(true);
@@ -71,8 +68,14 @@ export default function ProSubscriptionModal({ isOpen, onClose, onSuccess }) {
                     setPromoCode('');
                 }, 2000);
             }
-        } catch (err) {
-            setError(err.response?.data?.detail || "Неверный промокод");
+        } catch (e) {
+            console.error(e)
+
+            if (e.response?.status === 429) {
+                setError('Слишком много попыток. Попробуйте через час')
+            } else {
+                setError(e.userMessage || 'Неверный промокод');
+            }
         } finally {
             setLoading(false);
         }
@@ -204,7 +207,7 @@ export default function ProSubscriptionModal({ isOpen, onClose, onSuccess }) {
                                         </div>
                                         <div className="pro-feature">
                                             <span className="pro-feature__check">✓</span>
-                                            <span><strong>Приоритетная поддержка</strong></span>
+                                            <span><strong>Приоритетная поддержка</strong> (моральная)</span>
                                         </div>
                                         <div className="pro-feature">
                                             <span className="pro-feature__check">✓</span>
@@ -231,7 +234,7 @@ export default function ProSubscriptionModal({ isOpen, onClose, onSuccess }) {
                                                 className="promo-input"
                                                 placeholder="Введите промокод"
                                                 value={promoCode}
-                                                onChange={(e) => setPromoCode(e.target.value)}
+                                                onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
                                                 disabled={loading}
                                             />
                                             <button
@@ -256,7 +259,7 @@ export default function ProSubscriptionModal({ isOpen, onClose, onSuccess }) {
                                     </div>
 
                                     <p className="pro-modal__note">
-                                        Бесплатный пробный период 30 дней по промокоду <strong>ATTUNED</strong>
+                                        Тут должен был быть бесплатный промокод, но мы в beta версии. Искренне ваши <strong>ATTUNED</strong>
                                     </p>
                                 </>
                             ) : (

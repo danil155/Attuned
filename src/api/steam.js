@@ -1,11 +1,23 @@
 import api from "./client";
 
-export async function importSteamLibrary(token, steam_input, cart_id) {
-    const { data } = await api.post('/steam/import', {
-        steam_input,
-        cart_id
+
+export async function scanSteamLibrary(steamInput, cartId){
+    const { data } = await api.post('/steam/scan', {
+        steam_input: steamInput,
+        cart_id: cartId
     }, {
-        headers: { 'x-token': token },
+        withCredentials: true
+    });
+
+    return data;
+}
+
+export async function importSteamLibrary(cartId, selectedIgdbIds) {
+    const { data } = await api.post('/steam/import', {
+        cart_id: cartId,
+        selected_igdb_ids: selectedIgdbIds
+    }, {
+        withCredentials: true
     });
 
     return data;

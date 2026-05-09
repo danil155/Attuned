@@ -9,11 +9,11 @@ export const DEFAULT_FILTERS = {
 };
 
 const MIN_RATING_OPTIONS = [
-    { label: "Любой", value: 0 },
-    { label: "60+",   value: 60 },
-    { label: "70+",   value: 70 },
-    { label: "80+",   value: 80 },
-    { label: "90+",   value: 90 },
+    { label: 'Любой', value: 0 },
+    { label: '60+',   value: 60 },
+    { label: '70+',   value: 70 },
+    { label: '80+',   value: 80 },
+    { label: '90+',   value: 90 },
 ];
 
 export function RecsFilters({ genres = [], platforms = [], filters, onChange }) {

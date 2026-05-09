@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useBeforeUnload } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { sendFeedback } from "../../api";
-import { useAuth } from "../../context/AuthContext";
+import { useAuth, useError } from "../../context";
 import { StyleEmoji } from "../../services/StyleEmoji";
 import "./Feedback.css";
 
@@ -70,9 +70,10 @@ const TYPE_FIELDS = {
 
 export default function Feedback() {
     const { user } = useAuth();
+    const { showError } = useError();
 
     const [formData, setFormData] = useState({
-        feedback_type: "bug",
+        feedback_type: 'bug',
         summary: '',
         description: '',
         browser: '',
@@ -146,29 +147,29 @@ export default function Feedback() {
     const detectBrowserAndOS = () => {
         const ua = navigator.userAgent;
 
-        let browser = "Unknown";
-        if (ua.includes("Chrome") && !ua.includes("Edg"))
-            browser = "Chrome";
-        else if (ua.includes("Firefox"))
-            browser = "Firefox";
-        else if (ua.includes("Safari") && !ua.includes("Chrome"))
-            browser = "Safari";
-        else if (ua.includes("Edg"))
-            browser = "Edge";
-        else if (ua.includes("Opera") || ua.includes("Opr"))
-            browser = "Opera";
+        let browser = 'Unknown';
+        if (ua.includes('Chrome') && !ua.includes('Edg'))
+            browser = 'Chrome';
+        else if (ua.includes('Firefox'))
+            browser = 'Firefox';
+        else if (ua.includes('Safari') && !ua.includes('Chrome'))
+            browser = 'Safari';
+        else if (ua.includes('Edg'))
+            browser = 'Edge';
+        else if (ua.includes('Opera') || ua.includes('Opr'))
+            browser = 'Opera';
 
-        let os = "Unknown";
-        if (ua.includes("Windows"))
-            os = "Windows";
-        else if (ua.includes("Mac"))
-            os = "macOS";
-        else if (ua.includes("Linux"))
-            os = "Linux";
-        else if (ua.includes("Android"))
-            os = "Android";
-        else if (ua.includes("iOS") || ua.includes("iPhone") || ua.includes("iPad"))
-            os = "iOS";
+        let os = 'Unknown';
+        if (ua.includes('Windows'))
+            os = 'Windows';
+        else if (ua.includes('Mac'))
+            os = 'macOS';
+        else if (ua.includes('Linux'))
+            os = 'Linux';
+        else if (ua.includes('Android'))
+            os = 'Android';
+        else if (ua.includes('iOS') || ua.includes('iPhone') || ua.includes('iPad'))
+            os = 'iOS';
 
         setFormData((prev) => ({
             ...prev,
@@ -180,12 +181,12 @@ export default function Feedback() {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        if (!formData.summary.trim()) {
-            setError("Пожалуйста, кратко опишите суть");
+        if (currentFields.summary && !formData.summary.trim()) {
+            setError('Пожалуйста, кратко опишите суть');
             return;
         }
-        if (!formData.description.trim()) {
-            setError("Пожалуйста, расскажите подробнее");
+        if (currentFields.description && !formData.description.trim()) {
+            setError('Пожалуйста, расскажите подробнее');
             return;
         }
         if (currentFields.requires_company_name && !formData.company_name.trim()) {
@@ -233,8 +234,14 @@ export default function Feedback() {
             await sendFeedback(payload);
             setIsSubmitting(true);
             setIsSubmitted(true);
-        } catch (err) {
-            setError("Не удалось отправить. Попробуйте позже.");
+        } catch (e) {
+            console.error(e)
+
+            if (e.response?.status === 429) {
+                showError('Слишком много попыток. Попробуйте через час')
+            } else {
+                showError('Что-то пошло не по плану. Попробуйте позже')
+            }
         } finally {
             setIsSubmitting(false);
         }

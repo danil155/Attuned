@@ -1,53 +1,37 @@
-import {createContext, useCallback, useContext, useEffect, useState} from "react";
-import {deleteAccount, getMe, regenerateToken} from "../api";
+import { createContext, useCallback, useContext, useEffect, useState } from "react";
+import { deleteAccount, getMe, regenerateToken, logout } from "../api";
 import wsService from "../services/wsService";
 
 const AuthContext = createContext(null);
 
-const TOKEN_KEY = 'attuned_token';
-
 export function AuthProvider({ children }) {
-    const [token, setTokenState] = useState(() => localStorage.getItem(TOKEN_KEY));
     const [user, setUser] = useState(null);
-    const [authLoading, setAuthLoading] = useState(!!localStorage.getItem(TOKEN_KEY));
+    const [authLoading, setAuthLoading] = useState(true);
     const [wsReady, setWsReady] = useState(false);
 
-    const saveToken = useCallback((t) => {
-        localStorage.setItem(TOKEN_KEY, t);
-        setTokenState(t);
-    }, []);
-
-    const clearToken = useCallback(() => {
-        localStorage.removeItem(TOKEN_KEY);
-        setTokenState(null);
-        setUser(null);
-    }, []);
-
     useEffect(() => {
-        if (!token) {
-            setAuthLoading(false);
-            return;
-        }
-
-        setAuthLoading(true);
-        getMe(token)
-            .then((data) => {
+        const checkAuth = async () => {
+            try {
+                setAuthLoading(true);
+                const data = await getMe();
                 setUser(data);
+            } catch (error) {
+                setUser(null);
+            } finally {
                 setAuthLoading(false);
-            })
-            .catch(() => {
-                clearToken();
-                setAuthLoading(false);
-            });
-    }, [token, clearToken]);
+            }
+        };
+
+        checkAuth();
+    }, []);
 
     useEffect(() => {
-        if (!token) {
+        if (!user) {
             wsService.disconnect();
             return;
         }
 
-        wsService.connect(token);
+        wsService.connect();
 
         const offSync = wsService.on('sync_state', () => setWsReady(true));
 
@@ -59,35 +43,41 @@ export function AuthProvider({ children }) {
             offSync();
             clearTimeout(timeout);
         };
-    }, [token]);
+    }, [user]);
 
     const doRegenerateToken = useCallback(async () => {
-        if (!token)
+        if (!user)
             return null;
 
-        const data = await regenerateToken(token);
+        return await regenerateToken();
+    }, [user]);
 
-        return data.access_token;
-    }, [token]);
-
-    const updateToken = useCallback((newToken) => {
-        saveToken(newToken);
-    }, [saveToken]);
+    const doLogout = useCallback(async () => {
+        await logout();
+        setUser(null);
+        setWsReady(false);
+        wsService.disconnect();
+    }, []);
 
     const doDeleteAccount = useCallback(async () => {
-        if (!token)
+        if (!user)
             return;
-        await deleteAccount(token);
-        wsService.disconnect();
-        clearToken();
-    }, [token, clearToken]);
+        try {
+            await deleteAccount();
+            setUser(null);
+            setWsReady(false);
+            wsService.disconnect();
+        } catch (error) {
+            console.error('Failed to delete account', error);
+        }
+    }, [user]);
 
     const updateProStatus = useCallback(async () => {
-        if (!token)
+        if (!user)
             return;
 
         try {
-            const data = await getMe(token);
+            const data = await getMe();
             setUser(data);
 
             return data;
@@ -95,23 +85,21 @@ export function AuthProvider({ children }) {
             console.error('Failed to refresh user data', error);
             return null;
         }
-    }, [token]);
+    }, [user]);
 
     const value = {
-        token,
         user,
+        setUser,
         authLoading,
         wsReady,
-        isAuthed: !!token && !!user,
-        saveToken,
-        clearToken,
+        isAuthed: !!user,
         doRegenerateToken,
-        updateToken,
+        doLogout,
         doDeleteAccount,
         updateProStatus,
     };
 
-    return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+    return <AuthContext.Provider value={ value }>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {

@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { generateAccount } from "../../api";
-import { useAuth } from "../../context/AuthContext";
+import {generateAccount, getMe, loginByToken} from "../../api";
+import { useAuth, useError } from "../../context";
+import { StyleEmoji } from "../../services/StyleEmoji";
 import TokenRevealModal from "./TokenRevealModal";
 import logo from "../../assets/AttunedLogo512.png";
 import "./WelcomeModal.css";
@@ -17,7 +18,8 @@ const welcomePhrases = [
     'ЖДАЛИ-ЖДАЛИ',
     'ПОТЕРЯЛСЯ?',
     'МАТАДОРА!',
-    'МУСЯ, ЭТО ТЫ?'
+    'МУСЯ, ЭТО ТЫ?',
+    'СЛЫШУ ШОРОХ...'
 ]
 
 const getRandomPhrase = () => {
@@ -27,14 +29,16 @@ const getRandomPhrase = () => {
 }
 
 export default function WelcomeModal() {
-    const { saveToken } = useAuth();
+    const { setUser } = useAuth();
+    const { showError } = useError();
 
-    const [view, setView] = useState("welcome");
-    const [pasteValue, setPasteValue] = useState("");
-    const [pasteError, setPasteError] = useState("");
+    const [view, setView] = useState('welcome');
+    const [pasteValue, setPasteValue] = useState('');
+    const [pasteError, setPasteError] = useState('');
     const [generating, setGenerating] = useState(false);
     const [newToken, setNewToken] = useState(null);
     const [randomTitle] = useState(() => getRandomPhrase());
+    const [revealToken, setRevealToken] = useState(null);
 
     const [isAnimating, setIsAnimating] = useState(false);
     const [animationDirection, setAnimationDirection] = useState(null);
@@ -43,22 +47,23 @@ export default function WelcomeModal() {
         setGenerating(true);
         try {
             const data = await generateAccount();
-            setNewToken(data.access_token);
+
+            setRevealToken(data.access_token);
+            setView('reveal');
         } catch (e) {
             console.error(e);
+
+            if (e.response?.status === 429) {
+                showError('Слишком много попыток. Попробуйте через час')
+            } else {
+                showError('Не удалось сгенерировать аккаунт')
+            }
         } finally {
             setGenerating(false);
         }
     };
 
-    const handleTokenRevealClose = () => {
-        if (newToken) {
-            saveToken(newToken);
-            setNewToken(null);
-        }
-    };
-
-    const handlePaste = () => {
+    const handlePaste = async () => {
         const t = pasteValue.trim();
         if (!t) {
             setPasteError('Вставьте токен');
@@ -69,7 +74,15 @@ export default function WelcomeModal() {
             return;
         }
 
-        saveToken(t);
+        try {
+            await loginByToken(t);
+
+            const userData = await getMe();
+
+            setUser(userData);
+        } catch (err) {
+            setPasteError('Неверный токен');
+        }
     };
 
     const transitionToView = (newView, direction) => {
@@ -95,8 +108,15 @@ export default function WelcomeModal() {
         transitionToView('welcome', 'right');
     };
 
-    if (newToken) {
-        return <TokenRevealModal token={newToken} onClose={handleTokenRevealClose} />;
+    if (view === 'reveal') {
+        return (
+            <TokenRevealModal
+                token={revealToken}
+                onClose={() => {
+                    getMe().then(setUser);
+                }}
+            />
+        );
     }
 
     const isWelcome = view === 'welcome';
@@ -120,21 +140,30 @@ export default function WelcomeModal() {
 
                             <div className="wm-features">
                                 <div className="wm-feature">
-                                    <span className="wm-feature__icon">🔒</span>
+                                    <StyleEmoji
+                                        className="wm-feature__icon"
+                                        emoji="🔒"
+                                    />
                                     <div>
                                         <p className="wm-feature__title">Без привычной регистрации</p>
                                         <p className="wm-feature__sub">Никакой почты и паролей - только токен доступа, который ты сам хранишь.</p>
                                     </div>
                                 </div>
                                 <div className="wm-feature">
-                                    <span className="wm-feature__icon">🎮</span>
+                                    <StyleEmoji
+                                        className="wm-feature__icon"
+                                        emoji="🎮"
+                                    />
                                     <div>
                                         <p className="wm-feature__title">250 000+ игр в базе</p>
                                         <p className="wm-feature__sub">Инди, AAA, ретро - мы знаем все.</p>
                                     </div>
                                 </div>
                                 <div className="wm-feature">
-                                    <span className="wm-feature__icon">📦</span>
+                                    <StyleEmoji
+                                        className="wm-feature__icon"
+                                        emoji="📦"
+                                    />
                                     <div>
                                         <p className="wm-feature__title">Коллекции игр</p>
                                         <p className="wm-feature__sub">Собирай подборки и получай рекомендации на их основе.</p>
@@ -150,7 +179,7 @@ export default function WelcomeModal() {
                                 >
                                     {generating
                                         ? <span className="btn-spinner-small" />
-                                        : <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 11h-4v4h-2v-4H7v-2h4V7h2v4h4v2z" /></svg>
+                                        : ''
                                     }
                                     {generating ? "Создаем аккаунт..." : "Сгенерировать аккаунт"}
                                 </button>
@@ -183,7 +212,7 @@ export default function WelcomeModal() {
                                     className={`wm-paste-input ${pasteError ? "wm-paste-input--error" : ""}`}
                                     placeholder="Вставь токен сюда..."
                                     value={pasteValue}
-                                    onChange={(e) => { setPasteValue(e.target.value); setPasteError(""); }}
+                                    onChange={(e) => { setPasteValue(e.target.value); setPasteError(''); }}
                                     onKeyDown={(e) => e.key === "Enter" && handlePaste()}
                                     autoFocus
                                 />

@@ -1,5 +1,5 @@
-import {useCallback, useEffect, useRef, useState} from "react";
-import { useApp } from "../../context/AppContext";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useApp } from "../../context";
 import "./GameCard.css";
 
 export function GameCard({ game, onDislike }) {
@@ -127,8 +127,18 @@ export function GameCard({ game, onDislike }) {
         }, 800);
     };
 
+    const handleCardClick = (e) => {
+        if (!e.target.closest('button')) {
+            window.open(game.igdb_url, '_blank');
+        }
+    };
+
     return (
-        <article className={`game-card ${dismissed ? "game-card--out" : ""}`}>
+        <article
+            className={`game-card ${dismissed ? "game-card--out" : ""}`}
+            onClick={handleCardClick}
+            style={{ cursor: 'pointer' }}
+        >
             {game.match_percent != null && (
                 <div className="game-card__match">
                     <span className="match-score">{game.match_percent}%</span>

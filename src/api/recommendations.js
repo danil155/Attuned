@@ -1,20 +1,22 @@
 import api from "./client";
 
 export async function getRecommendations({
-    liked_igdb_ids,
-    disliked_igdb_ids = [],
+    preferences,
     seen_igdb_ids = [],
-    limit = 10,
     platforms = [],
-    released_only = true
+    niche = false,
+    limit = 10,
+    only_released = true
 }) {
-    const { data } = await api.post('/recommendations/', {
-        liked_igdb_ids,
-        disliked_igdb_ids,
+    const { data } = await api.post('/recommendations', {
+        preferences,
         seen_igdb_ids,
-        limit,
         ...(platforms.length > 0 && { platforms }),
-        ...(released_only && { released_only }),
+        ...(niche && { niche }),
+        limit,
+        ...(only_released && { only_released }),
+    }, {
+        withCredentials: true
     });
 
     return data;

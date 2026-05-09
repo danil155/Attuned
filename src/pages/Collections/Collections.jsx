@@ -1,13 +1,14 @@
 import { useEffect, useState, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
-import { useApp, STARTER_PACKS, LIKES_BASKET_ID, DISLIKES_BASKET_ID } from "../../context/AppContext";
-import { useAuth } from "../../context/AuthContext";
+import { STARTER_PACKS, LIKES_BASKET_ID, DISLIKES_BASKET_ID } from "../../context/AppContext";
+import { useApp, useError } from "../../context";
 import { SearchDropdown, PreFilters } from "../../components/games";
+import { SteamImportModal } from "../../components/steam/SteamImportModal";
 import { DEFAULT_PRE_FILTERS } from "../../components/games/PreFilters";
-import { getRecommendations, searchGamesByIds, importSteamLibrary } from "../../api";
-import wsService from "../../services/wsService";
+import { getRecommendations, searchGamesByIds } from "../../api";
 import { StyleEmoji } from "../../services/StyleEmoji";
+import wsService from "../../services/wsService";
 import "./Collections.css";
 
 const VIRTUAL_META = {
@@ -17,6 +18,7 @@ const VIRTUAL_META = {
 
 export default function Collections() {
     const navigate = useNavigate();
+
     const {
         isPro, baskets, carts, limits,
         activeBasketId, setActiveBasketId,
@@ -24,8 +26,7 @@ export default function Collections() {
         addGameToBasket, removeGameFromBasket, fillBasketFromPack,
         getBasket,
     } = useApp();
-
-    const { token } = useAuth();
+    const { showError } = useError();
 
     const [newBasketName, setNewBasketName] = useState('');
     const [addingBasket, setAddingBasket] = useState(false);
@@ -35,14 +36,10 @@ export default function Collections() {
     const [preFilters, setPreFilters] = useState(DEFAULT_PRE_FILTERS);
     const [showFilters, setShowFilters] = useState(false);
 
-    const [showSteamImport, setShowSteamImport] = useState(false);
-    const [steamImportClosing, setSteamImportClosing] = useState(false);
-    const [steamInput, setSteamInput] = useState('');
-    const [steamImporting, setSteamImporting] = useState(false);
+    const [showSteamModal, setShowSteamModal] = useState(false);
     const [steamImportResult, setSteamImportResult] = useState(null);
-    const [steamError, setSteamError] = useState(null);
-    const [steamSuccessFading, setSteamSuccessFading] = useState(false);
-    const steamTimeoutRef = useRef(null);
+
+    const [showSteamImport, setShowSteamImport] = useState(false);
     const steamInputRef = useRef(null);
 
     const [displayedBasketId, setDisplayedBasketId] = useState(activeBasketId)
@@ -62,7 +59,6 @@ export default function Collections() {
 
     useEffect(() => {
         setSteamImportResult(null);
-        setSteamError(null);
         setShowFilters(false);
     }, [activeBasketId]);
 
@@ -71,27 +67,6 @@ export default function Collections() {
             popconfirmRef.current?.focus();
         }
     }, [confirmAction]);
-
-    useEffect(() => {
-        if (steamImportResult) {
-            if (steamTimeoutRef.current) {
-                clearTimeout(steamTimeoutRef.current);
-            }
-
-            steamTimeoutRef.current = setTimeout(() => {
-                setSteamSuccessFading(true);
-                setTimeout(() => {
-                    closeSteamImport();
-                }, 400);
-            }, 4000);
-
-            return () => {
-                if (steamTimeoutRef.current) {
-                    clearTimeout(steamTimeoutRef.current);
-                }
-            };
-        }
-    }, [steamImportResult]);
 
     useEffect(() => {
         if (activeBasketId !== displayedBasketId && !isAnimating) {
@@ -106,20 +81,6 @@ export default function Collections() {
             }, 100);
         }
     }, [showSteamImport]);
-
-    useEffect(() => {
-        const handleKeyDown = (e) => {
-            if (e.key === 'Escape' && showSteamImport && !steamImportClosing) {
-                closeSteamImport();
-            }
-        };
-
-        if (showSteamImport) {
-            window.addEventListener('keydown', handleKeyDown);
-
-            return () => window.removeEventListener('keydown', handleKeyDown);
-        }
-    }, [showSteamImport, steamImportClosing]);
 
     const handleSwitchBasket = (basketId) => {
         if (basketId === activeBasketId || isAnimating)
@@ -160,10 +121,11 @@ export default function Collections() {
 
         setLoading(true);
         try {
-            const liked_ids = basket.games
+            const preferences = basket.games
             const recs = await getRecommendations({
-                liked_igdb_ids: liked_ids,
+                preferences: preferences,
                 limit: 10,
+                niche: preFilters.niche,
                 platforms: preFilters.platforms,
                 released_only: preFilters.releasedOnly
             });
@@ -171,69 +133,28 @@ export default function Collections() {
             sessionStorage.setItem('attuned_recs', JSON.stringify(recs));
             sessionStorage.setItem('attuned_source_type', 'collection');
             sessionStorage.setItem('attuned_source_name', basket.name);
-            sessionStorage.setItem('attuned_source_ids', JSON.stringify(liked_ids));
+            sessionStorage.setItem('attuned_source_ids', JSON.stringify(preferences));
             navigate('/recommendations');
         } catch (error) {
             console.error(error);
+            showError('Не удалось получить рекомендации по коллекции');
         } finally {
             setLoading(false);
         }
     };
 
-    const handleSteamImport = async () => {
-        if (!steamInput.trim() || !activeBasket)
-            return;
-
-        setSteamImporting(true);
-        setSteamError(null);
-        setSteamImportResult(null);
-
-        try {
-            const result = await importSteamLibrary(
-                token,
-                steamInput.trim(),
-                activeBasket.id
-            );
-
-            setSteamImportResult(result);
-
-            if (result.added_to_cart > 0) {
-                setSteamInput('');
-                wsService.sync();
-            }
-
-        } catch (error) {
-            console.error('Steam import error:', error);
-            let errorMessage= error.message || 'Ошибка при импорте из Steam';
-
-            if (error.response?.status === 404) {
-                errorMessage = 'Пользователь Steam не найден. Проверьте правильность ID или ссылки.';
-            } else if (error.response?.status === 403) {
-                errorMessage = 'Профиль Steam закрыт. Сделайте библиотеку игр публичной в настройках конфиденциальности.'
-            } else if (error.response?.status === 401) {
-                errorMessage = 'Требуется авторизация. Пожалуйста, войдите заново.'
-            }
-
-            setSteamError(errorMessage);
-        } finally {
-            setSteamImporting(false);
-        }
-    };
-
-    const closeSteamImport = () => {
-        if (steamTimeoutRef.current) {
-            clearTimeout(steamTimeoutRef.current);
-        }
-
-        setSteamImportClosing(true);
+    const handleSteamImportSuccess = (result) => {
+        setSteamImportResult(result);
         setTimeout(() => {
-            setShowSteamImport(false);
-            setSteamImportClosing(false);
             setSteamImportResult(null);
-            setSteamError(null);
-            setSteamInput('');
-            setSteamSuccessFading(false);
-        }, 300);
+        }, 4000);
+        wsService.sync();
+    }
+
+    const handleGameClick = (e, game) => {
+        if (!e.target.closest('.icon-btn')) {
+            window.open(game.igdb_url, '_blank');
+        }
     };
 
     const canAddBasket = carts.length < limits.baskets;
@@ -501,7 +422,7 @@ export default function Collections() {
                                     <div className="steam-import-trigger">
                                         <button
                                             className="btn-steam-import"
-                                            onClick={() => setShowSteamImport(true)}
+                                            onClick={() => setShowSteamModal(true)}
                                         >
                                             Импорт из Steam
                                             <span className="btn-beta-badge-steam">BETA</span>
@@ -509,106 +430,25 @@ export default function Collections() {
                                     </div>
                                 )}
 
-                                {!isVirtual && (showSteamImport || steamImportClosing) && (
-                                    <div className={`steam-import-panel ${steamImportClosing ? 'steam-import-panel--closing' : ''}`}>
-                                        <div className="steam-import-header">
-                                            <h3>Импорт библиотеки игр из Steam</h3>
-                                            <button
-                                                className="steam-import-close"
-                                                onClick={closeSteamImport}
-                                            >
-                                                ✕
-                                            </button>
+                                {!isVirtual && (
+                                    <SteamImportModal
+                                        isOpen={showSteamModal}
+                                        onClose={() => setShowSteamModal(false)}
+                                        cartId={activeBasket.id}
+                                        cartName={activeBasket.name}
+                                        onSuccess={handleSteamImportSuccess}
+                                        currentGamesCount={activeBasket.games.length}
+                                        gamesLimit={limits.gamesPerBasket}
+                                    />
+                                )}
+
+                                {steamImportResult && (
+                                    <div className="steam-import-success-notification">
+                                        <span>✅</span>
+                                        <div>
+                                            <strong>Импорт завершен!</strong>
+                                            <p>Добавлено в коллекцию: <strong>{steamImportResult.added_to_cart}</strong> игр.</p>
                                         </div>
-
-                                        <p className="steam-import-description">
-                                            Введите ссылку на профиль Steam, Steam ID или vanity name.<br/>
-                                            <strong>Важно:</strong> профиль должен быть открытым (публичным).<br/><br/>
-                                            Импорт может быть некорректным! Функция в тестовом режиме.
-                                        </p>
-
-                                        <div className="steam-import-form">
-                                            <input
-                                                ref={steamInputRef}
-                                                type="text"
-                                                className="steam-import-input"
-                                                placeholder="Например: https://steamcommunity.com/id/username/ или steamid"
-                                                value={steamInput}
-                                                onChange={(e) => setSteamInput(e.target.value)}
-                                                onKeyDown={(e) => {
-                                                    if (e.key === "Enter" && !steamImporting && steamInput.trim()) {
-                                                        handleSteamImport();
-                                                    }
-                                                    if (e.key === 'Escape') {
-                                                        e.preventDefault();
-                                                        closeSteamImport();
-                                                    }
-                                                }}
-                                                disabled={steamImporting}
-                                            />
-                                            <button
-                                                className="btn-steam-import-submit"
-                                                onClick={handleSteamImport}
-                                                disabled={steamImporting || !steamInput.trim()}
-                                            >
-                                                {steamImporting ? (
-                                                    <>
-                                                        <span className="btn-spinner-small" />
-                                                        Импорт...
-                                                    </>
-                                                ) : (
-                                                    "Импортировать"
-                                                )}
-                                            </button>
-                                        </div>
-
-                                        {steamError && (
-                                            <div className="steam-import-error">
-                                                <span>⚠️</span>
-                                                <div>
-                                                    <strong>Ошибка импорта</strong>
-                                                    <p>{steamError}</p>
-                                                    {steamError.includes("private") && (
-                                                        <small>Сделайте вашу библиотеку Steam публичной в настройках конфиденциальности</small>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        )}
-
-                                        {steamImportResult && (
-                                            <div className={`steam-import-success ${steamSuccessFading ? 'steam-import-success--fade-out' : ''}`}>
-                                                <button
-                                                    className="steam-success-close"
-                                                    onClick={closeSteamImport}
-                                                    aria-label="Закрыть"
-                                                >
-                                                    ✕
-                                                </button>
-
-                                                <span>✅</span>
-                                                <div>
-                                                    <strong>Импорт завершен!</strong>
-                                                    <p>
-                                                        Найдено {steamImportResult.matched} из {steamImportResult.total_steam_games} игр.<br/>
-                                                        Добавлено в коллекцию: <strong>{steamImportResult.added_to_cart}</strong>.
-                                                    </p>
-                                                    {steamImportResult.unmatched_names && steamImportResult.unmatched_names.length > 0 && (
-                                                        <details className="steam-unmatched">
-                                                            <summary>Не найденные игры ({steamImportResult.unmatched_names.length})</summary>
-                                                            <ul>
-                                                                {steamImportResult.unmatched_names.slice(0, 10).map((name, idx) => (
-                                                                    <li key={idx}>{name}</li>
-                                                                ))}
-                                                                {steamImportResult.unmatched_names.length > 10 && (
-                                                                    <li>...и еще {steamImportResult.unmatched_names.length - 10}</li>
-                                                                )}
-                                                            </ul>
-                                                        </details>
-                                                    )}
-                                                </div>
-                                                <div className="steam-success-progress" />
-                                            </div>
-                                        )}
                                     </div>
                                 )}
 
@@ -619,7 +459,8 @@ export default function Collections() {
                                             <div
                                                 key={g.igdb_id}
                                                 className="basket-row"
-                                                style={{ '--row-index': idx }}
+                                                style={{ '--row-index': idx, cursor: 'pointer' }}
+                                                onClick={(e) => handleGameClick(e, g)}
                                             >
                                                 <div className="basket-row__cover"
                                                      style={{ backgroundImage: g?.cover_url ? `url(${g.cover_url})` : "none" }}
@@ -679,6 +520,7 @@ export default function Collections() {
                                                             fillBasketFromPack(activeBasket.id, games);
                                                         } catch (err) {
                                                             console.error(err);
+                                                            showError('Не удалось загрузить стартовый набор игр');
                                                         } finally {
                                                             setLoading(false);
                                                         }

@@ -216,13 +216,202 @@
     margin-top: 1.25rem;
 }
 
+@media (min-width: 768px) and (max-width: 992px) {
+    .not-found__content {
+        max-width: 480px;
+    }
+
+    .not-found__code {
+        font-size: clamp(100px, 20vw, 180px);
+    }
+
+    .not-found__title {
+        font-size: clamp(22px, 4vw, 30px);
+    }
+
+    .not-found__reason {
+        font-size: 15px;
+        margin-bottom: 1.75rem;
+    }
+
+    .not-found__emojis {
+        gap: 16px;
+        margin-bottom: 2rem;
+    }
+
+    .not-found__emoji {
+        width: 48px;
+        height: 48px;
+    }
+
+    .not-found__btn {
+        padding: 12px 28px;
+        font-size: 14px;
+    }
+
+    .not-found__glow:first-of-type {
+        width: 550px;
+        height: 400px;
+    }
+
+    .not-found__glow--secondary {
+        width: 300px;
+        height: 300px;
+        bottom: -80px;
+        right: -60px;
+    }
+}
+
+@media (max-width: 768px) {
+    .not-found {
+        padding: 1.5rem;
+        min-height: 100vh;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .not-found__content {
+        max-width: 420px;
+    }
+
+    .not-found__code {
+        font-size: clamp(80px, 20vw, 140px);
+        margin-bottom: 0.25rem;
+    }
+
+    .not-found__title {
+        font-size: clamp(20px, 5vw, 26px);
+        letter-spacing: 0.06em;
+        margin-bottom: 0.75rem;
+    }
+
+    .not-found__reason {
+        font-size: 14px;
+        line-height: 1.55;
+        margin-bottom: 1.5rem;
+        padding: 0 0.5rem;
+    }
+
+    .not-found__emojis {
+        gap: 14px;
+        margin-bottom: 2rem;
+    }
+
+    .not-found__emoji {
+        width: 44px;
+        height: 44px;
+    }
+
+    .not-found__btn {
+        padding: 12px 24px;
+        font-size: 14px;
+        gap: 8px;
+    }
+
+    .not-found__hint {
+        font-size: 11px;
+        margin-top: 1rem;
+    }
+
+    .not-found__glow:first-of-type {
+        width: 450px;
+        height: 350px;
+        top: -60px;
+    }
+
+    .not-found__glow--secondary {
+        width: 250px;
+        height: 250px;
+        bottom: -60px;
+        right: -40px;
+    }
+}
+
 @media (max-width: 480px) {
     .not-found {
         padding: 1rem;
     }
 
+    .not-found__content {
+        max-width: 100%;
+    }
+
+    .not-found__code {
+        font-size: clamp(80px, 18vw, 120px);
+    }
+
+    .not-found__title {
+        font-size: 18px;
+        letter-spacing: 0.04em;
+        margin-bottom: 0.5rem;
+    }
+
+    .not-found__reason {
+        font-size: 13px;
+        line-height: 1.5;
+        margin-bottom: 1.25rem;
+        padding: 0 0.25rem;
+    }
+
+    .not-found__emojis {
+        gap: 12px;
+        margin-bottom: 1.75rem;
+    }
+
+    .not-found__emoji {
+        width: 40px;
+        height: 40px;
+    }
+
     .not-found__btn {
         width: 100%;
         justify-content: center;
+        padding: 11px 20px;
+        font-size: 13px;
+        border-radius: 100px;
+    }
+
+    .not-found__btn svg {
+        width: 14px;
+        height: 14px;
+    }
+
+    .not-found__hint {
+        font-size: 10px;
+        margin-top: 0.875rem;
+    }
+
+    .not-found__glow:first-of-type {
+        width: 350px;
+        height: 280px;
+        top: -40px;
+    }
+
+    .not-found__glow--secondary {
+        width: 200px;
+        height: 200px;
+        bottom: -40px;
+        right: -30px;
+        opacity: 0.6;
+    }
+}
+
+@media (max-width: 768px) {
+    @keyframes floatEmoji {
+        0%, 100% {
+            transform: translateY(0) rotate(0deg);
+        }
+        25% {
+            transform: translateY(-6px) rotate(-2deg);
+        }
+        75% {
+            transform: translateY(4px) rotate(2deg);
+        }
+    }
+}
+
+@media (hover: none) and (pointer: coarse) {
+    .not-found__btn {
+        min-height: 48px;
     }
 }

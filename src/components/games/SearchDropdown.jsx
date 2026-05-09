@@ -1,9 +1,12 @@
-import {useState, useEffect, useRef} from "react";
+import { useState, useEffect, useRef } from "react";
 import { searchGames } from "../../api";
+import { useError } from "../../context";
 import "./SearchDropdown.css";
 
 
-export function SearchDropdown({ excludeIds = [], onSelect, placeholder = "Найди игру...", disabled = false }) {
+export function SearchDropdown({ excludeIds = [], onSelect, placeholder = 'Найди игру...', disabled = false }) {
+    const { showError } = useError();
+
     const [query, setQuery] = useState('');
     const [open, setOpen] = useState(false);
     const [results, setResults] = useState([]);
@@ -25,6 +28,7 @@ export function SearchDropdown({ excludeIds = [], onSelect, placeholder = "На�
                 setResults(gamesArray.filter(g => !excludeIds.includes(g.igdb_id)));
             } catch (error) {
                 console.error('Search error: ', error);
+                showError('Не смогли получить информацию об играх')
             } finally {
                 setLoading(false);
             }

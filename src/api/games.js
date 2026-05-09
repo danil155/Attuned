@@ -2,6 +2,7 @@ import api from "./client";
 
 export async function searchGames(q, limit = 20) {
     const { data } = await api.get('/games/search', {
+        withCredentials: true,
         params: { q, limit },
     });
 

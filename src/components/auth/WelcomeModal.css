@@ -282,7 +282,222 @@
     line-height: 1.5;
 }
 
-@media (max-width: 520px) {
-    .welcome-modal { padding: 2rem 1.5rem 1.5rem; }
-    .wm-title { font-size: 28px; }
+@media (min-width: 768px) and (max-width: 992px) {
+    .welcome-modal {
+        padding: 2rem 2rem 1.75rem;
+    }
+
+    .wm-title {
+        font-size: 32px;
+    }
+
+    .wm-desc {
+        font-size: 14px;
+        margin-bottom: 1.5rem;
+    }
+
+    .wm-feature {
+        padding: 10px 12px;
+    }
+
+    .wm-feature__icon {
+        font-size: 18px;
+    }
+
+    .wm-feature__title {
+        font-size: 13px;
+    }
+
+    .wm-feature__sub {
+        font-size: 11px;
+    }
+}
+
+@media (max-width: 768px) {
+    .modal-overlay {
+        padding: 0.75rem;
+    }
+
+    .modal-container {
+        max-width: 420px;
+    }
+
+    .welcome-modal {
+        padding: 1.5rem 1.25rem 1.25rem;
+        border-radius: var(--radius-lg);
+    }
+
+    .wm-logo {
+        margin-bottom: 1.25rem;
+    }
+
+    .wm-logo img {
+        width: 48px;
+        height: 48px;
+    }
+
+    .wm-logo__name {
+        font-size: 16px;
+    }
+
+    .wm-title {
+        font-size: 26px;
+        margin-bottom: 0.5rem;
+    }
+
+    .wm-desc {
+        font-size: 13px;
+        line-height: 1.55;
+        margin-bottom: 1.25rem;
+    }
+
+    .wm-features {
+        gap: 10px;
+        margin-bottom: 1.5rem;
+    }
+
+    .wm-feature {
+        padding: 10px 12px;
+        gap: 10px;
+    }
+
+    .wm-feature__icon {
+        font-size: 18px;
+    }
+
+    .wm-feature__title {
+        font-size: 13px;
+    }
+
+    .wm-feature__sub {
+        font-size: 11px;
+    }
+
+    .wm-actions {
+        gap: 8px;
+    }
+
+    .wm-btn {
+        padding: 12px;
+        font-size: 14px;
+        gap: 8px;
+    }
+
+    .wm-back {
+        margin-bottom: 1rem;
+        font-size: 12px;
+    }
+
+    .wm-paste-input {
+        padding: 10px 14px;
+        font-size: 13px;
+    }
+
+    .wm-paste-error {
+        font-size: 11px;
+        margin-top: 5px;
+    }
+
+    .wm-paste-hint {
+        font-size: 11px;
+        margin-top: 0.75rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .modal-overlay {
+        padding: 0.5rem;
+    }
+
+    .modal-container {
+        max-width: none;
+        width: 100%;
+    }
+
+    .welcome-modal {
+        padding: 1.25rem 1rem 1rem;
+        border-radius: var(--radius-md) var(--radius-md) var(--radius-lg) var(--radius-lg);
+    }
+
+    .wm-logo {
+        margin-bottom: 1rem;
+    }
+
+    .wm-logo img {
+        width: 40px;
+        height: 40px;
+    }
+
+    .wm-logo__name {
+        font-size: 14px;
+    }
+
+    .wm-title {
+        font-size: 22px;
+    }
+
+    .wm-desc {
+        font-size: 12px;
+        margin-bottom: 1rem;
+    }
+
+    .wm-features {
+        gap: 8px;
+        margin-bottom: 1.25rem;
+    }
+
+    .wm-feature {
+        padding: 8px 10px;
+        gap: 8px;
+    }
+
+    .wm-feature__icon {
+        font-size: 16px;
+    }
+
+    .wm-feature__title {
+        font-size: 12px;
+    }
+
+    .wm-feature__sub {
+        font-size: 10px;
+    }
+
+    .wm-btn {
+        padding: 10px;
+        font-size: 13px;
+        border-radius: var(--radius-md);
+    }
+
+    .wm-back {
+        font-size: 11px;
+        margin-bottom: 0.75rem;
+    }
+
+    .wm-paste-input {
+        padding: 9px 12px;
+        font-size: 12px;
+    }
+
+    .wm-paste-hint {
+        font-size: 10px;
+    }
+}
+
+@media (hover: none) and (pointer: coarse) {
+    .wm-btn,
+    .wm-back {
+        min-height: 44px;
+    }
+
+    .wm-paste-input {
+        font-size: 16px;
+    }
+}
+
+@media (max-width: 768px) {
+    .modal-overlay::before,
+    .modal-overlay::after {
+        display: none;
+    }
 }

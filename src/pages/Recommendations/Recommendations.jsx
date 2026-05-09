@@ -1,16 +1,18 @@
-import {useState, useEffect, useMemo} from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { GameCard, RecsFilters } from "../../components/games";
 import { DEFAULT_FILTERS } from "../../components/games/RecsFilters";
 import { getRecommendations } from "../../api";
-import { useGenres } from "../../context/AppContext";
+import { useGenres, useError } from "../../context";
 import "./Recommendations.css";
 
 const TODAY = new Date().toISOString().slice(0, 10);
 
 export default function Recommendations() {
     const navigate = useNavigate();
+
     const { genres } = useGenres();
+    const { showError } = useError();
 
     const [recs, setRecs] = useState([]);
     const [source, setSource] = useState([]);
@@ -58,6 +60,21 @@ export default function Recommendations() {
 
     const handleDislike = (igdb_id) => {
         setRecs((prev) => prev.filter((r) => r.igdb_id !== igdb_id));
+        const stored = sessionStorage.getItem('attuned_recs');
+        if (stored) {
+            const data = JSON.parse(stored);
+            const items = data?.items ?? data ?? [];
+            const updatedItems = items.filter((r) => r.igdb_id !== igdb_id);
+
+            if (data.items) {
+                sessionStorage.setItem('attuned_recs', JSON.stringify({
+                    ...data,
+                    items: updatedItems
+                }));
+            } else {
+                sessionStorage.setItem('attuned_recs', JSON.stringify(updatedItems));
+            }
+        }
     };
 
     const addMore = async () => {
@@ -68,7 +85,7 @@ export default function Recommendations() {
             setLoadingMore(true);
 
             const extra = await getRecommendations({
-                liked_igdb_ids: sourceIds,
+                preferences: sourceIds,
                 seen_igdb_ids: recs.map((r) => r.igdb_id),
                 limit: 4,
             });
@@ -77,6 +94,31 @@ export default function Recommendations() {
 
             if (items.length > 0) {
                 setRecs((prev) => [...prev, ...items]);
+
+                const stored = sessionStorage.getItem('attuned_recs');
+                if (stored) {
+                    const data = JSON.parse(stored);
+                    let currentItems = data.items;
+
+                    if (data.items) {
+                        currentItems = data.items;
+                    } else {
+                        currentItems = data;
+                    }
+
+                    const updatedItems = [...currentItems, ...items];
+
+                    if (data.items) {
+                        sessionStorage.setItem('attuned_recs', JSON.stringify({
+                            ...data,
+                            items: updatedItems
+                        }));
+                    } else {
+                        sessionStorage.setItem('attuned_recs', JSON.stringify(updatedItems));
+                    }
+                } else {
+                    sessionStorage.setItem('attuned_recs', JSON.stringify(items));
+                }
 
                 setTimeout(() => {
                     const newCards = document.querySelectorAll('.recs-grid .game-card');
@@ -90,6 +132,7 @@ export default function Recommendations() {
             }
         } catch (error) {
             console.error('Error when uploading recommendations:', error);
+            showError('Не удалось запросить дополнительные рекомендации')
         } finally {
             setLoadingMore(false);
         }

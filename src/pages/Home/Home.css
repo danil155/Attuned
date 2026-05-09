@@ -7,6 +7,7 @@
 .hero {
     padding: 5rem 0 4rem;
     position: relative;
+
 }
 
 .hero__glow {
@@ -39,6 +40,7 @@
     overflow: hidden;
     opacity: 0;
     margin-top: 0;
+    width: 100%;
 }
 
 .filters-wrapper--open {
@@ -49,6 +51,7 @@
 
 .filters-inner {
     min-height: 0;
+    overflow-x: hidden;
 }
 
 .pulse-dot {
@@ -212,6 +215,7 @@
 .btn-generate {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 9px;
     padding: 0 34px;
     height: 50px;
@@ -429,13 +433,149 @@
     padding: 0 9px 8px;
 }
 
+@media (min-width: 768px) and (max-width: 992px) {
+    .home {
+        padding: 0 1.5rem 4rem;
+    }
+
+    .hero {
+        padding: 4rem 0 3rem;
+    }
+
+    .hero__title {
+        font-size: clamp(48px, 7vw, 70px);
+    }
+}
+
 @media (max-width: 768px) {
-    .home { padding: 0 1rem 4rem; }
-    .hero { padding: 3rem 0 2.5rem; }
-    .hero__controls { gap: 1.2rem; }
+    .home {
+        padding: 0 1rem 3rem;
+        overflow-x: hidden;
+    }
+
+    .hero {
+        padding: 2rem 0 2rem;
+    }
+
+    .hero__title {
+        font-size: clamp(40px, 7vw, 70px);
+    }
+
+    .hero__controls {
+        gap: 1rem;
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .hero__actions {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .btn-toggle-filters {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .packs-grid {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 12px;
+    }
+
+    .pack-card {
+        width: 100%;
+        height: auto;
+        min-height: 180px;
+        padding: 20px;
+    }
+
+    .popular-grid {
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+        gap: 8px;
+    }
 }
 
 @media (max-width: 480px) {
-    .btn-generate { width: 100%; justify-content: center; }
-    .hero__controls { flex-direction: column; align-items: flex-start; }
+    .btn-generate {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .hero__controls {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .hero__title {
+        font-size: clamp(25px, 7vw, 70px);
+    }
+
+    .hero__eyebrow {
+        font-size: 10px;
+    }
+
+    .hero__sub {
+        font-size: 12px;
+    }
+
+    .btn-toggle-filters {
+        font-size: 10px;
+    }
+
+    .count-group {
+        width: 100%;
+    }
+
+    .count-btns {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 6px;
+    }
+
+    .count-btn {
+        text-align: center;
+        padding: 7px 0;
+    }
+
+    .chips-list {
+        gap: 6px;
+    }
+
+    .chip__name {
+        max-width: 100%;
+        font-size: 11px;
+    }
+
+    .packs-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    .pack-card {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 16px;
+        text-align: left;
+        padding: 16px;
+        min-height: auto;
+    }
+
+    .pack-card__emoji-wrapper {
+        margin-bottom: 0;
+    }
+
+    .pack-card__info {
+        flex: 1;
+    }
+
+    .popular-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+    }
+
+    .section-title {
+        font-size: 24px;
+        margin-bottom: 1rem;
+    }
 }

@@ -150,6 +150,7 @@
     color: var(--text);
     font-size: 14px;
     transition: all var(--transition);
+    text-transform: uppercase;
 }
 
 .promo-input:focus {
@@ -270,38 +271,327 @@
     font-size: 12px;
 }
 
-@media (max-width: 768px) {
+@media (min-width: 768px) and (max-width: 992px) {
     .pro-modal {
-        padding: 24px;
-        width: 95%;
+        max-width: 450px;
+        padding: 28px;
+    }
+
+    .pro-modal__title {
+        font-size: 22px;
     }
 
     .pro-features {
-        padding: 16px;
+        padding: 18px;
+    }
+
+    .pro-feature {
+        font-size: 13px;
+        gap: 10px;
+    }
+}
+
+@media (max-width: 768px) {
+    .pro-modal {
+        padding: 24px 20px;
+        width: 92%;
+        max-width: 420px;
+        border-radius: var(--radius-lg);
+    }
+
+    .modal-close {
+        top: 16px;
+        right: 18px;
+        font-size: 26px;
+    }
+
+    .pro-modal__icon {
+        font-size: 40px;
+        margin-bottom: 12px;
+    }
+
+    .pro-modal__title {
+        font-size: 20px;
+    }
+
+    .pro-modal__subtitle {
+        font-size: 13px;
+        margin-bottom: 20px;
+        padding: 0 8px;
+    }
+
+    .pro-features {
+        padding: 14px 16px;
+        margin-bottom: 20px;
+    }
+
+    .pro-feature {
+        padding: 6px 0;
+        font-size: 13px;
+        gap: 10px;
+    }
+
+    .pro-feature__check {
+        font-size: 16px;
+        width: 20px;
+    }
+
+    .pro-payment-btn {
+        padding: 12px;
+        font-size: 14px;
+    }
+
+    .pro-divider {
+        margin: 16px 0;
     }
 
     .promo-form {
         flex-direction: column;
+        gap: 10px;
     }
 
-    .promo-submit {
-        padding: 12px;
-    }
-
-    .toast-notification {
-        bottom: 16px;
-        width: 90%;
-    }
-
-    .toast-content {
-        padding: 12px 20px;
-    }
-
-    .toast-text strong {
+    .promo-input {
+        padding: 10px 14px;
         font-size: 13px;
     }
 
-    .toast-text span {
+    .promo-submit {
+        padding: 10px;
+        font-size: 13px;
+    }
+
+    .pro-error {
+        font-size: 12px;
+        margin-top: 10px;
+    }
+
+    .pro-modal__note {
         font-size: 11px;
+        margin-top: 16px;
+        padding-top: 12px;
+    }
+
+    .pro-success {
+        padding: 16px 0;
+    }
+
+    .pro-success__icon {
+        font-size: 48px;
+    }
+
+    .pro-success__title {
+        font-size: 16px;
+    }
+
+    .pro-success__text {
+        font-size: 13px;
+    }
+}
+
+@media (max-width: 480px) {
+    .pro-modal-overlay {
+        align-items: flex-end;
+        background: rgba(0, 0, 0, 0.7);
+    }
+
+    .pro-modal {
+        width: 100%;
+        max-width: none;
+        border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+        padding: 20px 16px 24px;
+        margin-top: auto;
+    }
+
+    .modal-close {
+        top: 12px;
+        right: 14px;
+        font-size: 24px;
+    }
+
+    .pro-modal__icon {
+        font-size: 36px;
+        margin-bottom: 8px;
+    }
+
+    .pro-modal__title {
+        font-size: 18px;
+    }
+
+    .pro-modal__subtitle {
+        font-size: 12px;
+        margin-bottom: 16px;
+    }
+
+    .pro-features {
+        padding: 12px 14px;
+        margin-bottom: 16px;
+    }
+
+    .pro-feature {
+        padding: 5px 0;
+        font-size: 12px;
+        gap: 8px;
+    }
+
+    .pro-feature__check {
+        font-size: 14px;
+        width: 18px;
+    }
+
+    .pro-payment-btn {
+        padding: 10px;
+        font-size: 13px;
+    }
+
+    .pro-divider {
+        margin: 14px 0;
+    }
+
+    .pro-divider span {
+        font-size: 11px;
+        padding: 0 10px;
+    }
+
+    .promo-input {
+        padding: 9px 12px;
+        font-size: 12px;
+    }
+
+    .promo-submit {
+        padding: 9px;
+        font-size: 12px;
+    }
+
+    .pro-error {
+        font-size: 11px;
+        margin-top: 8px;
+    }
+
+    .pro-modal__note {
+        font-size: 10px;
+        margin-top: 14px;
+        padding-top: 10px;
+    }
+
+    .pro-success {
+        padding: 12px 0;
+    }
+
+    .pro-success__icon {
+        font-size: 42px;
+        margin-bottom: 8px;
+    }
+
+    .pro-success__title {
+        font-size: 15px;
+    }
+
+    .pro-success__text {
+        font-size: 12px;
+    }
+
+    .toast-notification {
+        bottom: 20px;
+        width: calc(100% - 32px);
+        left: 50%;
+    }
+
+    .toast-content {
+        padding: 12px 16px;
+        gap: 10px;
+    }
+
+    .toast-icon {
+        font-size: 20px;
+    }
+
+    .toast-text strong {
+        font-size: 12px;
+    }
+
+    .toast-text span {
+        font-size: 10px;
+    }
+}
+
+@media (max-width: 360px) {
+    .pro-modal {
+        padding: 16px 14px 20px;
+    }
+
+    .modal-close {
+        top: 10px;
+        right: 12px;
+        font-size: 22px;
+    }
+
+    .pro-modal__title {
+        font-size: 17px;
+    }
+
+    .pro-features {
+        padding: 10px 12px;
+    }
+
+    .pro-feature {
+        font-size: 11px;
+    }
+
+    .pro-payment-btn {
+        padding: 9px;
+        font-size: 12px;
+    }
+
+    .promo-input {
+        padding: 8px 10px;
+        font-size: 11px;
+    }
+
+    .promo-submit {
+        padding: 8px;
+        font-size: 11px;
+    }
+}
+
+@media (hover: none) and (pointer: coarse) {
+    .pro-payment-btn,
+    .promo-submit,
+    .modal-close {
+        min-height: 44px;
+    }
+
+    .pro-feature {
+        padding: 10px 0;
+    }
+
+    .promo-input {
+        font-size: 16px;
+    }
+}
+
+@media (prefers-contrast: high) {
+    .pro-modal {
+        border-width: 2px;
+    }
+
+    .pro-feature__check {
+        color: #ff6b35;
+    }
+}
+
+@media (max-width: 768px) {
+    .pro-modal {
+        animation: modalSlideUp 0.3s ease-out;
+    }
+
+    @keyframes modalSlideUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
 }
