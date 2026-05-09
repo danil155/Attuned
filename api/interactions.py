@@ -1,6 +1,6 @@
 import json
 import logging
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect, status
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect, status, Cookie
 
 from db_service import UserDataCrud, UserInteractionCrud, UserCartCrud, SearchCrud
 
@@ -13,13 +13,24 @@ def _get_db(websocket: WebSocket):
 
 
 @router.websocket('/interactions')
-async def websocket_interactions(websocket: WebSocket):
+async def websocket_interactions(
+        websocket: WebSocket
+):
     await websocket.accept()
     db = _get_db(websocket)
 
     try:
-        auth_data = await websocket.receive_json()
-        token = auth_data.get('token')
+        cookies_header = websocket.headers.get('cookie', '')
+        token = None
+
+        if cookies_header:
+            cookies = {}
+            for cookie in cookies_header.split(';'):
+                cookie = cookie.strip()
+                if '=' in cookie:
+                    name, value = cookie.split('=', 1)
+                    cookies[name.strip()] = value.strip()
+            token = cookies.get('attuned_token')
 
         async with db.session() as session:
             user_crud = UserDataCrud(session)
@@ -32,6 +43,7 @@ async def websocket_interactions(websocket: WebSocket):
                 return
 
             user_id = user.id
+            await websocket.send_json({'type': 'auth_success'})
 
         while True:
             data = await websocket.receive_text()

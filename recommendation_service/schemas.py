@@ -4,9 +4,10 @@ from config import settings
 
 
 class RecommendationRequest(BaseModel):
-    liked_igdb_ids: list[int] = Field(min_length=1)
-    disliked_igdb_ids: list[int] = Field(default_factory=list)
+    preferences: list[int] = Field(min_length=1)
     seen_igdb_ids: list[int] = Field(default_factory=list)
+    platforms: list[str] = Field(default_factory=list)
+    niche: bool = False
     limit: int = Field(default=settings.DEFAULT_LIMIT, ge=1, le=settings.MAX_TOTAL)
     only_released: bool = True
 

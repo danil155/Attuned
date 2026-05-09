@@ -7,8 +7,37 @@ import requests
 from config import IGDBConfig, settings
 from igdb_service.schemas import IGDBGame
 from igdb_service.genres_cache import GenresCache
+from igdb_service.platforms_cache import PlatformsCache
 
 logger = logging.getLogger(__name__)
+
+PLATFORM_TYPE_NAMES = {
+    1: 'Консоли',
+    2: 'Аркады',
+    3: 'Прочее',
+    4: 'ПК и ОС',
+    5: 'Портативные',
+    6: 'Компьютеры',
+}
+
+POPULAR_PLATFORMS = {
+    'Консоли': [
+        'PlayStation 5', 'PlayStation 4', 'PlayStation 3', 'Xbox Series X|S', 'Xbox One', 'Xbox 360', 'Nintendo Switch',
+    ],
+    'Портативные': [
+        'Nintendo 3DS', 'Nintendo DS', 'PlayStation Vita', 'PlayStation Portable', 'Game Boy Advance',
+    ],
+    'Компьютеры': [
+        'Apple II', 'ZX Spectrum', 'Atari ST/STE',
+    ],
+    'ПК и ОС': [
+        'PC (Microsoft Windows)', 'Mac', 'Linux', 'Android'
+    ],
+}
+
+POPULAR_THRESHOLD = 7
+
+CATEGORY_ORDER = ['ПК и ОС', 'Консоли', 'Портативные', 'Аркады', 'Компьютеры', 'Прочее']
 
 
 class IGDBClient:
@@ -19,6 +48,7 @@ class IGDBClient:
         self._token_expires_at: str | None = None
         self._last_request_at: float = 0.0
         self._genres_cache = GenresCache()
+        self._platforms_cache = PlatformsCache()
 
     # используем пагинацию по id и выкачиваем все игры из IGDB
     def fetch_all_games(self) -> Generator[list[IGDBGame], None, None]:
@@ -98,6 +128,63 @@ class IGDBClient:
         self._genres_cache.update(genres)
 
         return genres
+
+    def get_platforms_list(self, force_refresh: bool = False) -> dict:
+        if not force_refresh and not self._platforms_cache.is_stale():
+            cached = self._platforms_cache.get()
+
+            if cached:
+                return cached
+
+        logger.info('Fetching platforms from IGDB API')
+        headers = {
+            'Client-ID': self._config.client_id,
+            'Authorization': f'Bearer {self._access_token}',
+        }
+
+        response = self._session.post(
+            self._config.platforms_url,
+            headers=headers,
+            data=f'fields name, platform_type; sort name asc; limit {self._config.batch_size};'
+        )
+
+        if response.status_code != 200:
+            raise Exception(f'Failed to fetch platforms: {response.status_code} - {response.text}')
+
+        raw = response.json()
+
+        grouped: dict[str, list[str]] = {}
+        for item in raw:
+            type_id = item.get('platform_type') or 3
+            category_name = PLATFORM_TYPE_NAMES.get(type_id, 'Прочее')
+            grouped.setdefault(category_name, [])
+            grouped[category_name].append(item['name'])
+
+        result = {}
+        for category, platforms in grouped.items():
+            popular = POPULAR_PLATFORMS.get(category, [])
+            popular_in_cat = [p for p in popular if p in platforms]
+
+            if len(platforms) > POPULAR_THRESHOLD:
+                result[category] = {
+                    'popular': popular_in_cat,
+                    'rest': [p for p in platforms if p not in popular_in_cat],
+                }
+            else:
+                result[category] = {
+                    'popular': platforms,
+                    'rest': [],
+                }
+
+        result = {
+            cat: result[cat]
+            for cat in CATEGORY_ORDER
+            if cat in result
+        }
+
+        self._platforms_cache.update(result)
+
+        return result
 
     # обновляем access_token
     def _refresh_access_token(self) -> None:

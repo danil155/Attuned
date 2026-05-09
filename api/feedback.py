@@ -1,9 +1,10 @@
 import smtplib
 from email.mime.text import MIMEText
 from pydantic import BaseModel, Field
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 
 from config import settings
+from api.rate_limiter import limiter
 
 router = APIRouter(prefix='/feedback', tags=['feedback'])
 
@@ -29,7 +30,10 @@ class FeedbackForm(BaseModel):
 
 
 @router.post('')
+@limiter.limit('10/hour')
+@limiter.limit('50/day')
 async def send_feedback(
+        request: Request,
         form: FeedbackForm
 ):
     try:
