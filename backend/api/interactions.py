@@ -70,6 +70,7 @@ async def websocket_interactions(
                                     'igdb_id': game.igdb_id,
                                     'name': game.name,
                                     'cover_url': game.cover_url,
+                                    'igdb_url': game.igdb_url,
                                     'genres': game.genres,
                                     'first_release_date': (
                                         game.first_release_date.strftime('%Y-%m-%d')
@@ -91,6 +92,7 @@ async def websocket_interactions(
                                     'igdb_id': game.igdb_id,
                                     'name': game.name,
                                     'cover_url': game.cover_url,
+                                    'igdb_url': game.igdb_url,
                                     'genres': game.genres,
                                     'first_release_date': (
                                         game.first_release_date.strftime('%Y-%m-%d') if game.first_release_date else None

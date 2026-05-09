@@ -179,7 +179,8 @@ async def _run_sync_then_embed(sync_service: SyncService,
 def create_app() -> FastAPI:
     app = FastAPI(
         title='Attuned API',
-        lifespan=lifespan
+        lifespan=lifespan,
+        version='1.0.0'
     )
 
     app.state.limiter = limiter

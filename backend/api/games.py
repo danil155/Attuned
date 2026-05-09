@@ -1,7 +1,8 @@
-from fastapi import APIRouter, Query, Request, Depends
+from fastapi import APIRouter, Query, Request, Depends, status, HTTPException
 
+from api.cookie import get_token_from_request
 from api.schemas import GameSearchResult, GameSearchResponse
-from db_service import SearchCrud, PopularGamesCrud
+from db_service import SearchCrud, PopularGamesCrud, UserDataCrud
 
 router = APIRouter(prefix='/games', tags=['games'])
 
@@ -13,12 +14,23 @@ def _get_db(request: Request):
 @router.get('/search',
             response_model=GameSearchResponse,
             summary='Search for games by name')
-async def search_games(q: str = Query(description='Search query'),
-                       limit: int = Query(default=20, ge=1, le=50),
-                       db=Depends(_get_db)) -> GameSearchResponse:
+async def search_games(
+        request: Request,
+        q: str = Query(description='Search query'),
+        limit: int = Query(default=20, ge=1, le=50),
+        db=Depends(_get_db)
+) -> GameSearchResponse:
+    token = await get_token_from_request(request)
+    if token is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail='Token required'
+        )
+
     async with db.session() as session:
         repo = SearchCrud(session)
-        games = await repo.search_by_name(q, limit=limit)
+        user_id = (await UserDataCrud(session).get_user_by_token(token)).id
+        games = await repo.search_by_name(q, user_id=user_id, limit=limit)
 
     return GameSearchResponse(
         items=[

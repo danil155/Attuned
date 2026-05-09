@@ -5,7 +5,7 @@ import hashlib
 import time
 import random
 from datetime import datetime, timezone, timedelta
-from sqlalchemy import func, select, update, Float, delete, and_, text, case
+from sqlalchemy import func, select, update, Float, delete, and_, text, case, exists
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -414,7 +414,7 @@ class SearchCrud:
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
-    async def search_by_name(self, query: str, limit: int = 20) -> list[Game]:
+    async def search_by_name(self, query: str, user_id: int, limit: int = 20) -> list[Game]:
         clean_query = query.strip().lower()
         ts_query = func.plainto_tsquery('simple', query)
 
@@ -430,7 +430,13 @@ class SearchCrud:
 
         result = await self._session.execute(
             select(Game)
-            .where((func.similarity(Game.name, query) > 0.1) | (Game.search_vector.op('@@')(ts_query)))
+            .where(
+                (func.similarity(Game.name, query) > 0.1) | (Game.search_vector.op('@@')(ts_query)),
+                ~exists().where(and_(UserGameInteractions.user_id == user_id,
+                                     UserGameInteractions.igdb_id == Game.igdb_id,
+                                     UserGameInteractions.interaction_type == 'dislike')
+                                )
+            )
             .order_by(score.desc())
             .limit(limit)
         )
@@ -505,14 +511,6 @@ class UserDataCrud:
         await self._session.flush()
 
         return result.rowcount > 0
-
-    async def get_user_by_id(self, user_id: int) -> UserData | None:
-        result = await self._session.execute(
-            select(UserData)
-            .where(UserData.id == user_id)
-        )
-
-        return result.scalar_one_or_none()
 
     async def update_pro_status(self, external_id: str, is_pro: bool) -> bool:
         result = await self._session.execute(
