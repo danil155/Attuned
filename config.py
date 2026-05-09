@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     BASE_URL: str = Field('https://api.igdb.com/v4', alias='BASE_URL')
     AUTH_URL: str = Field('https://id.twitch.tv/oauth2/token', alias='AUTH_URL')
     GENRES_URL: str = Field('https://api.igdb.com/v4/genres', alias='GENRES_URL')
+    PLATFORMS_URL: str = Field('https://api.igdb.com/v4/platforms', alias='PLATFORMS_URL')
     RATE_LIMIT_RPS: float = Field(4.0, alias='RATE_LIMIT_RPS')
     BATCH_SIZE: int = Field(500, alias='BATCH_SIZE')
 
@@ -63,13 +64,21 @@ class Settings(BaseSettings):
     SEMANTIC_WEIGHT: float = Field(0.6, alias='SEMANTIC_WEIGHT')
     TAGS_WEIGHT: float = Field(0.4, alias='TAGS_WEIGHT')
 
+    MAX_REVIEWS_PER_GAME: int = Field(30, alias='MAX_REVIEWS_PER_GAME')
+    MAX_CHARS_PER_GAME: int = Field(2000, alias='MAX_CHARS_PER_GAME')
+    MIN_REVIEW_LEN: int = Field(50, alias='MIN_REVIEW_LEN')
+    REVIEW_CSV_PATH: str = Field('SteamReviewDataset1M/reviews.csv', alias='REVIEW_CSV_PATH')
+
     # Sync Parameters
     FULL_SYNC_THRESHOLD_DAYS: int = Field(1, alias='FULL_SYNC_THRESHOLD_DAYS')
 
     # Recommendation Parameters
-    ALPHA: float = Field(0.6, alias='ALPHA')    # semantic_score
-    BETA: float = Field(0.35, alias='BETA')     # tags_score
-    GAMMA: float = Field(0.05, alias='GAMMA')   # niche_boost
+    AAA_THRESHOLD: int = Field(1000, alias='AAA_THRESHOLD')
+
+    ALPHA: float = Field(0.6, alias='ALPHA')                    # semantic_score
+    BETA: float = Field(0.35, alias='BETA')                     # tags_score
+    GAMMA_NICHE_SOFT: float = Field(0.05, alias='GAMMA_SOFT')   # niche_boost
+    GAMMA_NICHE_STRONG: float = Field(0.15, alias='GAMMA_STRONG')
 
     CANDIDATE_MULTIPLIER: int = Field(10, alias='CANDIDATE_MULTIPLIER')
 
@@ -77,7 +86,7 @@ class Settings(BaseSettings):
         '{"keywords":0.4,"themes":0.3,"genres":0.15,"game_modes":0.1,"developers":0.05}',
         alias='TAG_WEIGHTS'
     )
-    MAX_TOTAL: int = Field(30, alias='MAX_TOTAL')
+    MAX_TOTAL: int = Field(100, alias='MAX_TOTAL')
     DEFAULT_LIMIT: int = Field(10, alias='DEFAULT_LIMIT')
 
     # Main Parameters
@@ -85,9 +94,11 @@ class Settings(BaseSettings):
     SYNC_MINUTE: int = Field(0, alias='SYNC_MINUTE')
     GENRES_REFRESH_HOUR: int = Field(14, alias='GENRES_REFRESH_HOUR')
     GENRES_REFRESH_MINUTE: int = Field(0, alias='GENRES_REFRESH_MINUTE')
+    PLATFORMS_REFRESH_HOUR: int = Field(15, alias='PLATFORMS_REFRESH_HOUR')
+    PLATFORMS_REFRESH_MINUTE: int = Field(0, alias='PLATFORMS_REFRESH_MINUTE')
 
     # CRUD Parameters
-    EMOJI_LIST: str = Field('😁,😋,😳,😱,🥰,🤓,😎,🥵,😴,🤡,😈,😌,🤠,😨,🤭', alias='EMOJI_LIST')
+    EMOJI_LIST: str = Field('😁,😋,😳,😱,🥰,🤓,😎,🥵,😴,🤡,😈,😌,🤠,😨,🤭,😂,🥶,🙄', alias='EMOJI_LIST')
 
     # Steam Parameters
     STEAM_API_KEY: str = Field(..., alias='STEAM_API_KEY')
@@ -96,6 +107,15 @@ class Settings(BaseSettings):
     RATE_LIMIT_DELAY: int = Field(1.0, alias='RATE_LIMIT_DELAY')
 
     SIMILARITY_THRESHOLD: float = Field(0.4, alias='SIMILARITY_THRESHOLD')
+
+    # SteamIGDBMatcher
+    FUZZY_MIN_SCORE: float = Field(0.85, alias='FUZZY_MIN_SCORE')
+    STEAM_APPS_CSV_PATH: str = Field('SteamReviewDataset1M/applications.csv', alias='STEAM_APPS_CSV_PATH')
+
+    # CoPlaySimilarityBuilder
+    TOP_K: int = Field(50, alias='TOP_K')
+    MIN_SIMILARITY: float = Field(0.05, alias='MIN_SIMILARITY')
+    MIN_SHARED_USERS: int = Field(5, alias='MIN_SHARED_USERS')
 
     # Yandex Parameters
     YANDEX_APPLICATION_PASSWORD: str = Field(..., alias='YANDEX_APPLICATION_PASSWORD')
@@ -126,13 +146,6 @@ class Settings(BaseSettings):
             raise ValueError(f'{field_name} must be between 0 and 59')
         return v
 
-    @field_validator('ALPHA', 'BETA', 'GAMMA')
-    @classmethod
-    def validate_weights(cls, v: float, info) -> float:
-        if not (0 <= v <= 1):
-            raise ValueError(f'{info.field_name} must be between 0 and 1')
-        return v
-
     class Config:
         env_file = '.env'
         env_file_encoding = 'utf-8'
@@ -150,6 +163,7 @@ class IGDBConfig:
         self.base_url = settings.BASE_URL
         self.auth_url = settings.AUTH_URL
         self.genres_url = settings.GENRES_URL
+        self.platforms_url = settings.PLATFORMS_URL
         self.rate_limit_rps = settings.RATE_LIMIT_RPS
         self.batch_size = settings.BATCH_SIZE
 

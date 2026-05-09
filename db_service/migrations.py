@@ -3,7 +3,6 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncEngine
 
 from db_service.models import Base
-from db_service.models import Base as UserBase
 
 logger = logging.getLogger(__name__)
 
@@ -18,10 +17,31 @@ _GIN_INDEXES = [
     'CREATE INDEX IF NOT EXISTS idx_games_no_embedding ON games (id) WHERE embedding IS NULL',
 ]
 
-_VECTOR_INDEX = f"""
-CREATE INDEX IF NOT EXISTS idx_games_embedding
-ON GAMES USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100)
-"""
+_VECTOR_INDEX = [
+    """
+    CREATE INDEX IF NOT EXISTS idx_games_embedding 
+    ON games USING ivfflat (embedding vector_cosine_ops) 
+    WITH (lists = 100);
+    """,
+    """
+    CREATE INDEX IF NOT EXISTS idx_review_embedding 
+    ON games USING ivfflat (review_embedding vector_cosine_ops) 
+    WITH (lists = 100);
+    """,
+]
+
+# _VECTOR_INDEX = [
+#     """
+#     CREATE INDEX IF NOT EXISTS idx_games_embedding
+#     ON games USING hnsw (embedding vector_cosine_ops)
+#     WITH (m = 8, ef_construction = 64);
+#     """,
+#     """
+#     CREATE INDEX IF NOT EXISTS idx_review_embedding
+#     ON games USING hnsw (review_embedding vector_cosine_ops)
+#     WITH (m = 8, ef_construction = 64);
+#     """,
+# ]
 
 _USER_INDEXES = [
     'CREATE INDEX IF NOT EXISTS idx_user_external ON user_data(external_id)',
@@ -29,7 +49,6 @@ _USER_INDEXES = [
     'CREATE INDEX IF NOT EXISTS idx_user_pro_expires ON user_data(pro_expires_at) WHERE is_pro = true',
     'CREATE INDEX IF NOT EXISTS idx_user_carts_user ON user_carts(user_id)',
     'CREATE INDEX IF NOT EXISTS idx_user_carts_games ON user_carts USING GIN (games)',
-    'CREATE INDEX IF NOT EXISTS idx_user_interactions_user ON user_game_interactions(user_id)',
     'CREATE INDEX IF NOT EXISTS idx_user_interactions_igdb ON user_game_interactions(igdb_id)',
     'CREATE INDEX IF NOT EXISTS idx_user_interactions_type ON user_game_interactions(interaction_type)',
     'CREATE INDEX IF NOT EXISTS idx_user_interactions_composite ON user_game_interactions(user_id, igdb_id, interaction_type)',
@@ -41,8 +60,6 @@ _SEARCH_INDEXES = [
 ]
 
 _LIKE_INDEXES = [
-    'CREATE INDEX IF NOT EXISTS idx_user_interactions_likes_count ON user_game_interactions (igdb_id) WHERE interaction_type = \'like\'',
-    'CREATE INDEX IF NOT EXISTS idx_user_interactions_likes_group ON user_game_interactions (interaction_type, igdb_id) WHERE interaction_type = \'like\'',
     'CREATE INDEX IF NOT EXISTS idx_user_interactions_likes_covering ON user_game_interactions (igdb_id, interaction_type) INCLUDE (user_id) WHERE interaction_type = \'like\'',
 ]
 
@@ -55,11 +72,11 @@ async def run_migrations(engine: AsyncEngine) -> None:
         await conn.execute(text('CREATE EXTENSION IF NOT EXISTS vector'))
 
         await conn.run_sync(Base.metadata.create_all)
-        await conn.run_sync(UserBase.metadata.create_all)
 
         for stmt in _GIN_INDEXES + _USER_INDEXES + _SEARCH_INDEXES + _LIKE_INDEXES:
             await conn.execute(text(stmt))
 
-        await conn.execute(text(_VECTOR_INDEX))
+        for stmt in _VECTOR_INDEX:
+            await conn.execute(text(stmt))
 
     logger.info('Migrations complete')

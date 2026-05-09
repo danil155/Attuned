@@ -12,6 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from config import settings
 from db_service.models import Game, SyncLog
 from db_service.models_user import UserData, UserCart, UserGameInteractions
+from db_service.models_steam import GameCoPlaySimilarity, SteamIGDBMap
 from igdb_service.schemas import IGDBGame
 
 logger = logging.getLogger(__name__)
@@ -60,8 +61,51 @@ class GameCrud:
 
         return result.scalar_one_or_none()
 
+    async def get_cover_url(self, igdb_id: int) -> str | None:
+        result = await self._session.execute(
+            select(Game.cover_url)
+            .where(Game.igdb_id == igdb_id)
+        )
+
+        return result.scalar_one_or_none()
+
+    async def find_igdb_match(self, name: str) -> int | None:
+        result = await self._session.execute(
+            select(Game.igdb_id)
+            .where(func.lower(Game.name) == name.lower(), Game.game_type.in_(settings.allowed_game_types_tuple))
+            .limit(1)
+        )
+        igdb_id = result.scalar_one_or_none()
+
+        if igdb_id is not None:
+            return igdb_id
+
+        result = await self._session.execute(
+            select(Game.igdb_id, func.similarity(Game.name, name).label('sim'))
+            .where(Game.name.bool_op('%')(name),
+                   Game.game_type.in_(settings.allowed_game_types_tuple),
+                   func.similarity(Game.name, name) >= settings.SIMILARITY_THRESHOLD,
+                   )
+            .order_by(func.similarity(Game.name, name).desc())
+            .limit(1)
+        )
+
+        return result.scalar_one_or_none()
+
+    async def get_names_to_ids_map(self, names: list[str] = None) -> dict[str, int]:
+        stmt = select(Game.name, Game.igdb_id)
+        if names:
+            stmt = stmt.where(func.lower(Game.name).in_([n.lower() for n in names]))
+
+        result = await self._session.execute(stmt)
+
+        return {row.name.lower(): row.igdb_id for row in result.all()}
+
     async def count(self) -> int:
-        result = await self._session.execute(select(func.count()).select_from(Game))
+        result = await self._session.execute(
+            select(func.count())
+            .select_from(Game)
+        )
 
         return result.scalar_one()
 
@@ -211,7 +255,31 @@ class EmbeddingCrud:
                 .values(embedding=vector)
             )
 
-    async def count_without_embeddings(self) -> None:
+    async def save_review_embeddings(self, igdb_ids: list[int], vectors: list[list[float]]) -> None:
+        for igdb_id, vec in zip(igdb_ids, vectors):
+            await self._session.execute(
+                update(Game)
+                .where(Game.igdb_id == igdb_id)
+                .values(review_embedding=vec)
+            )
+
+    async def count_review_embeddings(self) -> int:
+        result = await self._session.execute(
+            select(func.count())
+            .select_from(Game)
+            .where(Game.review_embedding.is_not(None))
+        )
+
+        return result.scalar_one()
+
+    async def load_steam_mapping(self) -> dict[int, int]:
+        result = await self._session.execute(
+            select(SteamIGDBMap.steam_appid, SteamIGDBMap.igdb_id)
+        )
+
+        return {row.steam_appid: row.igdb_id for row in result.all()}
+
+    async def count_without_embeddings(self) -> int:
         result = await self._session.execute(
             select(func.count()).select_from(Game).where(Game.embedding.is_(None))
         )
@@ -223,6 +291,25 @@ class RecommendationCrud:
     def __init__(self, session: AsyncSession):
         self._session = session
 
+    async def get_best_embeddings_by_igdb_ids(self, igdb_ids: list[int]) -> list[tuple[int, list[float]]]:
+        """ Returns review_embedding if present, otherwise - game embedding """
+
+        result = await self._session.execute(
+            select(Game.igdb_id, Game.review_embedding, Game.embedding)
+            .where(
+                Game.igdb_id.in_(igdb_ids),
+                (Game.review_embedding.is_not(None) | (Game.embedding.is_not(None))),
+            )
+        )
+
+        out = []
+        for row in result.all():
+            vec = row.review_embedding if row.review_embedding is not None else row.embedding
+            if vec is not None:
+                out.append((row.igdb_id, vec))
+
+        return out
+
     async def get_embeddings_by_igdb_ids(self, igdb_ids: list[int]) -> list[tuple[int, list[float]]]:
         result = await self._session.execute(
             select(Game.igdb_id, Game.embedding)
@@ -231,30 +318,53 @@ class RecommendationCrud:
 
         return [(row.igdb_id, row.embedding) for row in result.all()]
 
-    async def find_similar(self,
-                           embedding: list[float],
-                           exclude_igdb_ids: list[int],
-                           limit: int,
-                           only_released: bool = True,
-                           min_rating_count: int = 10) -> list[Game]:
+    async def find_similar(
+            self,
+            embedding: list[float],
+            exclude_igdb_ids: list[int],
+            limit: int,
+            only_released: bool = True,
+            min_rating_count: int = 10,
+            platforms: list[str] | None = None,
+    ) -> list[Game]:
         filters = [
-            Game.embedding.is_not(None),
-            Game.igdb_id.not_in(exclude_igdb_ids) if exclude_igdb_ids else True,
+            (Game.review_embedding.is_not(None) | (Game.embedding.is_not(None))),
             Game.rating_count >= min_rating_count,
         ]
+
+        if exclude_igdb_ids:
+            filters.append(Game.igdb_id.not_in(exclude_igdb_ids))
 
         if only_released:
             now = datetime.now(timezone.utc).replace(tzinfo=None)
             filters.append(Game.first_release_date <= now)
 
-        stmt = (select(Game)
-                .where(*filters)
-                .order_by(Game.embedding.op('<=>', return_type=Float)(embedding))
-                .limit(limit)
-                )
+        if platforms:
+            filters.append(Game.platforms.op('&&')(platforms))
+
+        stmt = (
+            select(Game)
+            .where(*filters)
+            .order_by(Game.embedding.op('<=>', return_type=Float)(embedding))
+            .limit(limit)
+        )
         result = await self._session.execute(stmt)
 
         return list(result.scalars().all())
+
+    async def get_games_metadata(self, igdb_ids: list[int]) -> list[dict]:
+        result = await self._session.execute(
+            select(Game.igdb_id, Game.genres, Game.themes, Game.keywords, Game.game_modes, Game.developers)
+            .where(Game.igdb_id.in_(igdb_ids))
+        )
+
+        return [{
+            'genres': row.genres,
+            'themes': row.themes,
+            'keywords': row.keywords,
+            'game_modes': row.game_modes,
+            'developers': row.developers
+        } for row in result.all()]
 
     async def get_max_rating_count(self) -> int:
         result = await self._session.execute(
@@ -262,6 +372,42 @@ class RecommendationCrud:
         )
 
         return result.scalar_one() or 1
+
+    async def get_max_rating(self) -> float:
+        result = await self._session.execute(
+            select(func.max(Game.rating))
+        )
+
+        return result.scalar_one() or 100.0
+
+    async def get_game_stats_by_igdb_ids(self, igdb_ids: list[int]) -> list[dict]:
+        result = await self._session.execute(
+            select(Game.igdb_id, Game.rating_count, Game.rating)
+            .where(Game.igdb_id.in_(igdb_ids))
+        )
+
+        return [
+            {'igdb_id': row.igdb_id, 'rating_count': row.rating_count, 'rating': row.rating}
+            for row in result.all()
+        ]
+
+    async def get_coplay_similarities(self, igdb_ids: list[int]) -> dict[int, float]:
+        if not igdb_ids:
+            return {}
+
+        result = await self._session.execute(
+            select(GameCoPlaySimilarity)
+            .where(GameCoPlaySimilarity.source_igdb_id.in_(igdb_ids))
+        )
+        rows = result.scalars().all()
+
+        coplay: dict[int, float] = {}
+        for row in rows:
+            for igdb_id, score in zip(row.similar_igdb_ids, row.similarity_scores):
+                if score > coplay.get(igdb_id, 0.0):
+                    coplay[igdb_id] = score
+
+        return coplay
 
 
 class SearchCrud:
@@ -273,13 +419,13 @@ class SearchCrud:
         ts_query = func.plainto_tsquery('simple', query)
 
         score = (
-            case((func.lower(Game.name) == clean_query, 100.0), else_=0.0) +
-            case((func.lower(Game.name).like(f'{clean_query}%'), 50.0), else_=0.0) +
-            func.coalesce(
-                func.ts_rank_cd(Game.search_vector, ts_query) * 10.0 * Game.search_boost,
-                0.0
-            ) +
-            func.similarity(Game.name, query) * 3.0
+                case((func.lower(Game.name) == clean_query, 100.0), else_=0.0) +
+                case((func.lower(Game.name).like(f'{clean_query}%'), 50.0), else_=0.0) +
+                func.coalesce(
+                    func.ts_rank_cd(Game.search_vector, ts_query) * 10.0 * Game.search_boost,
+                    0.0
+                ) +
+                func.similarity(Game.name, query) * 3.0
         )
 
         result = await self._session.execute(
@@ -590,3 +736,48 @@ class PopularGamesCrud:
         self._cache[cache_key] = (datetime.utcnow(), games)
 
         return games
+
+
+class SteamMappingCrud:
+    def __init__(self, session: AsyncSession) -> None:
+        self._session = session
+
+    async def get_count(self) -> int:
+        result = await self._session.execute(
+            select(func.count(SteamIGDBMap.steam_appid))
+        )
+
+        return result.scalar_one()
+
+    async def get_similarities_count(self) -> int:
+        result = await self._session.execute(
+            select(func.count(GameCoPlaySimilarity.source_igdb_id))
+        )
+
+        return result.scalar_one()
+
+    async def upsert_mappings(self, rows: list[dict]) -> None:
+        stmt = insert(SteamIGDBMap).values(rows)
+        stmt = stmt.on_conflict_do_update(
+            index_elements=['steam_appid'],
+            set_={col: stmt.excluded[col] for col in ['igdb_id', 'match_method', 'confidence']}
+        )
+
+        await self._session.execute(stmt)
+
+    async def load_appid_to_igdb_map(self) -> dict[int, int]:
+        result = await self._session.execute(
+            select(SteamIGDBMap.steam_appid, SteamIGDBMap.igdb_id)
+        )
+
+        return {row.steam_appid: row.igdb_id for row in result.all()}
+
+    async def upsert_similarities(self, rows: list[dict]) -> None:
+        stmt = insert(GameCoPlaySimilarity).values(rows)
+        stmt = stmt.on_conflict_do_update(
+            index_elements=['source_igdb_id'],
+            set_={'similar_igdb_ids': stmt.excluded.similar_igdb_ids,
+                  'similarity_scores': stmt.excluded.similarity_scores}
+        )
+
+        await self._session.execute(stmt)

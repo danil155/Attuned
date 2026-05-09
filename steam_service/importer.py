@@ -1,20 +1,15 @@
-from dataclasses import dataclass, field
-from sqlalchemy import select, func
-from sqlalchemy.ext.asyncio import AsyncSession
+from dataclasses import dataclass
 
-from db_service import Database, SearchCrud, UserCartCrud, UserDataCrud
-from db_service.models import Game
-from steam_service.client import SteamClient, SteamGame, SteamPrivateProfileError, SteamUserNotFoundError
-from config import settings
+from db_service import Database, UserCartCrud, GameCrud
+from steam_service.client import SteamClient
 
 
 @dataclass
-class ImportResult:
+class ScanResult:
     steam_id: str
     total_steam_games: int
     matched: int
-    added_to_cart: int
-    unmatched_names: list[str] = field(default_factory=list)
+    games: list[dict]
 
 
 class SteamImporter:
@@ -22,7 +17,7 @@ class SteamImporter:
         self._steam = steam_client
         self._db = db
 
-    async def import_to_cart(self, steam_input: str, cart_id: int, user_id: int) -> ImportResult:
+    async def scan_library(self, steam_input: str, cart_id: int, user_id: int) -> ScanResult:
         async with self._db.session() as session:
             cart_crud = UserCartCrud(session)
             cart = await cart_crud.get_cart(cart_id)
@@ -36,53 +31,61 @@ class SteamImporter:
         steam_games = result.games
 
         if not steam_games:
-            return ImportResult(
+            return ScanResult(
                 steam_id=result.steam_id,
                 total_steam_games=0,
                 matched=0,
-                added_to_cart=0,
+                games=[],
             )
 
-        matched_igdb_ids, unmatched = await self._match_games(steam_games)
+        async with self._db.session() as session:
+            cart = await UserCartCrud(session).get_cart(cart_id)
+            existing_in_cart = set(cart.games) if cart else set()
 
-        added = await self._fill_cart(cart_id, matched_igdb_ids)
-
-        return ImportResult(
-            steam_id=result.steam_id,
-            total_steam_games=len(steam_games),
-            matched=len(matched_igdb_ids),
-            added_to_cart=added,
-            unmatched_names=unmatched,
-        )
-
-    async def _match_games(self, steam_games: list[SteamGame]) -> tuple[list[int], list[str]]:
-        matched_ids: list[int] = []
-        unmatched: list[str] = []
+        games_preview = []
+        matched_count = 0
 
         async with self._db.session() as session:
+            game_crud = GameCrud(session)
             for steam_game in steam_games:
-                igdb_id = await self._find_igdb_match(session, steam_game.name)
-                if igdb_id is not None:
-                    matched_ids.append(igdb_id)
-                else:
-                    unmatched.append(steam_game.name)
+                igdb_match = await self._find_igdb_match(steam_game.name)
+                matched = igdb_match is not None
 
-        return matched_ids, unmatched
+                if matched:
+                    matched_count += 1
 
-    async def _fill_cart(self, cart_id: int, igdb_ids: list[int]) -> int:
-        if not igdb_ids:
-            return 0
+                    cover_url = await game_crud.get_cover_url(igdb_match)
 
-        added = 0
+                games_preview.append({
+                    'name': steam_game.name,
+                    'igdb_id': igdb_match,
+                    'matched': matched,
+                    'cover_url': cover_url,
+                    'already_in_cart': igdb_match in existing_in_cart if igdb_match else False
+                })
+
+        return ScanResult(
+            steam_id=result.steam_id,
+            total_steam_games=len(steam_games),
+            matched=matched_count,
+            games=games_preview,
+        )
+
+    async def import_selected_games(
+            self,
+            cart_id: int,
+            selected_igdb_ids: list[int]
+    ) -> int:
         async with self._db.session() as session:
             cart_crud = UserCartCrud(session)
             cart = await cart_crud.get_cart(cart_id)
 
             if not cart:
-                return 0
+                raise ValueError(f'Cart {cart_id} not found')
 
+            added = 0
             existing = set(cart.games)
-            new_ids = [igdb_id for igdb_id in igdb_ids if igdb_id not in existing]
+            new_ids = [igdb_id for igdb_id in selected_igdb_ids if igdb_id not in existing]
 
             if new_ids:
                 cart.games = list(existing) + new_ids
@@ -91,29 +94,8 @@ class SteamImporter:
 
         return added
 
-    async def _find_igdb_match(self, session: AsyncSession, steam_name: str) -> int | None:
-        exact = await session.execute(
-            select(Game.igdb_id)
-            .where(func.lower(Game.name) == steam_name.lower(), Game.game_type.in_(settings.allowed_game_types_tuple))
-            .limit(1)
-        )
+    async def _find_igdb_match(self, steam_name: str) -> int | None:
+        async with self._db.session() as session:
+            game_crud = GameCrud(session)
 
-        row = exact.scalar_one_or_none()
-        if row is not None:
-            return row
-
-        fuzzy = await session.execute(
-            select(Game.igdb_id, func.similarity(Game.name, steam_name).label('sim'))
-            .where(Game.name.bool_op('%')(steam_name),
-                   Game.game_type.in_(settings.allowed_game_types_tuple),
-                   func.similarity(Game.name, steam_name) >= settings.SIMILARITY_THRESHOLD,
-                   )
-            .order_by(func.similarity(Game.name, steam_name).desc())
-            .limit(1)
-        )
-
-        row = fuzzy.first()
-        if row is not None:
-            return row.igdb_id
-
-        return None
+            return await game_crud.find_igdb_match(steam_name)

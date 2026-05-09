@@ -8,13 +8,14 @@ from db_service.crud import (
     UserDataCrud,
     UserCartCrud,
     UserInteractionCrud,
-    PopularGamesCrud
+    PopularGamesCrud,
+    SteamMappingCrud
 )
 from db_service.migrations import run_migrations
 
 __all__ = [
     'Database',
     'GameCrud', 'SyncLogCrud', 'EmbeddingCrud', 'RecommendationCrud', 'SearchCrud', 'UserDataCrud', 'UserCartCrud',
-    'UserInteractionCrud', 'PopularGamesCrud',
+    'UserInteractionCrud', 'PopularGamesCrud', 'SteamMappingCrud',
     'run_migrations'
 ]
