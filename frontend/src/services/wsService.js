@@ -1,4 +1,4 @@
-const WS_URL = "ws://localhost:8000/ws/interactions";
+const WS_URL = "wss://attuned.ru/ws/interactions";
 
 const RECONNECT_DELAY_MS = 3000;
 const MAX_RECONNECT = 5;
@@ -35,6 +35,9 @@ class WsService {
         this._ws.onmessage = (e) => {
             try {
                 const msg = JSON.parse(e.data);
+                if (msg.type === 'auth_success') {
+                    this.sync();
+                }
                 this._emit(msg.type, msg);
             } catch  { }
         };

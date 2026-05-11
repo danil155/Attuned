@@ -6,11 +6,6 @@ NC='\033[0m'
 
 echo -e "${GREEN}Starting deployment...${NC}"
 
-if [ ! -f .env ]; then
-    echo -e "${RED}.env file not found! Copy .env.example to .env${NC}"
-    exit 1
-fi
-
 git pull origin main
 
 docker-compose down

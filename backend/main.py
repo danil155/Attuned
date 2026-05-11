@@ -188,7 +188,7 @@ def create_app() -> FastAPI:
 
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=['http://localhost:3000', 'https://attuned.ru'],
+        allow_origins=['http://localhost:3000', 'https://attuned.ru', 'https://www.attuned.ru'],
         allow_methods=['*'],
         allow_headers=['*'],
         allow_credentials=True

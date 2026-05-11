@@ -12,7 +12,7 @@ services:
       - postgres_data:/var/lib/postgresql/data
       - ./backups:/backups
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
       interval: 5s
@@ -25,7 +25,6 @@ services:
     build: ./backend
     container_name: attuned_backend
     restart: unless-stopped
-
     depends_on:
       db:
         condition: service_healthy
@@ -44,7 +43,7 @@ services:
     networks:
       - attuned_network
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8000:8000"
 
   frontend:
     build: ./frontend
@@ -54,22 +53,8 @@ services:
       - backend
     networks:
       - attuned_network
-
-  nginx:
-    image: nginx:alpine
-    container_name: attuned_nginx
-    restart: unless-stopped
     ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/conf.d/default/conf:ro
-      - ./ssl:/etc/nginx/ssl:ro
-    depends_on:
-      - frontend
-      - backend
-    networks:
-      - attuned_network
+      - "127.0.0.1:3000:3000"
 
   pgadmin:
     image: dpage/pgadmin4
@@ -79,7 +64,7 @@ services:
       PGADMIN_DEFAULT_EMAIL: admin@admin.com
       PGADMIN_DEFAULT_PASSWORD: ${PGA_PASSWORD}
     ports:
-      - "5050:80"
+      - "127.0.0.1:5050:80"
     depends_on:
       - db
     networks:
@@ -87,6 +72,9 @@ services:
     logging:
       driver: "none"
 
+networks:
+  attuned_network:
+    driver: bridge
 
 volumes:
   postgres_data:

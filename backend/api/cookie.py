@@ -7,9 +7,9 @@ def set_token_cookie(response: Response, token: str):
         value=token,
         httponly=True,
         secure=True,
-        samesite='strict',
+        samesite='lax',
         max_age=7 * 24 * 60 * 60,
-        path='/'
+        domain='.attuned.ru'
     )
 
 

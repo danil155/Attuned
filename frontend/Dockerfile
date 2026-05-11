@@ -1,11 +1,14 @@
-FROM node:18-alpine AS builder
+FROM node:20-alpine AS builder
 
 WORKDIR /app
 
 COPY package*.json ./
-RUN npm ci --only=production
+COPY package-lock.json ./
+
+RUN npm install --omit=dev
 
 COPY . .
+
 RUN npm run build
 
 FROM nginx:alpine
@@ -14,13 +17,16 @@ COPY --from=builder /app/build /usr/share/nginx/html
 
 RUN echo 'server { \
     listen 3000; \
+    server_name localhost;  \
     location / { \
         root /usr/share/nginx/html; \
         try_files $uri $uri/ /index.html; \
+        index index.html; \
     } \
     location /api { \
         proxy_pass http://backend:8000; \
         proxy_set_header Host $host; \
+        proxy_set_header X-Real-IP $remote_addr; \
     } \
 }' > /etc/nginx/conf.d/default.conf
 
