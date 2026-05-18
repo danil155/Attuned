@@ -55,6 +55,8 @@ services:
       - attuned_network
     ports:
       - "127.0.0.1:3000:3000"
+    logging:
+      driver: "none"
 
   pgadmin:
     image: dpage/pgadmin4

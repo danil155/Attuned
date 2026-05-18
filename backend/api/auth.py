@@ -12,8 +12,8 @@ async def _get_db(request: Request):
 
 
 @router.post('/generate-account', summary='Generate an anonymous account')
-@limiter.limit('5/hour')
-@limiter.limit('30/day')
+@limiter.limit('10/hour')
+@limiter.limit('50/day')
 async def generate_account(
         request: Request,
         response: Response,
